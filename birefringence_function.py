@@ -68,10 +68,10 @@ def main():
 
 	spectral_to_linear_srgb = lambda spectral: normalize_rgb(xyz_to_linear_srgb(spectral_to_xyz(spectral)))
 
-	for wavelength in range(500, 12000+1, 500):
-		color1 = srgb_to_termstring(spectral_to_linear_srgb(lambda x : planck(x, wavelength)))
-		color2 = srgb_to_termstring(linear_srgb_to_rgb(spectral_to_linear_srgb(lambda x : planck(x, wavelength))))
-		print(color1, color2, "%dK" % wavelength)
+	for temp in range(500, 12000+1, 500):
+		color1 = srgb_to_termstring(spectral_to_linear_srgb(lambda x : planck(x, temp)))
+		color2 = srgb_to_termstring(linear_srgb_to_rgb(spectral_to_linear_srgb(lambda x : planck(x, temp))))
+		print(color1, color2, "%dK" % temp)
 
 
 	for flourescent_spectrum in [flourescent_spectrum_1, flourescent_spectrum_2, flourescent_spectrum_3]:
