@@ -2,6 +2,8 @@
 
 import numpy as np
 import scipy.integrate as integrate
+import scipy.optimize as optimize
+import scipy.misc as misc
 
 def interp_func(vx, vy):
 	return lambda x : np.interp(x, vx, vy, 0, 0)
@@ -25,7 +27,7 @@ def xyz_to_linear_srgb(xyz):
 		[ 3.2404542, -1.5371385, -0.4985314],
 		[-0.9692660,  1.8760108,  0.0415560],
 		[ 0.0556434, -0.2040259,  1.0572252]])
-	return np.clip(xyztosrgb.dot(xyz), 0, np.inf)
+	return np.asarray(xyztosrgb.dot(xyz)).reshape(-1)
 
 def normalize_rgb(rgb):
 	if not np.all(rgb == 0):
@@ -33,9 +35,10 @@ def normalize_rgb(rgb):
 	return rgb
 
 def linear_srgb_luminance(rgb):
-	return np.average(rgb, weights=[0.213, 0.715, 0.072], axis=1)
+	return np.average(rgb, weights=[0.213, 0.715, 0.072])
 
 def linear_srgb_to_rgb(rgb):
+	rgb = np.clip(rgb, 0, np.inf)
 	nonlinearity = np.vectorize(lambda x: 12.92*x if x < 0.0031308 else 1.055*(x**(1.0/2.4))-0.055)
 	return np.clip(nonlinearity(rgb), 0, 1)
 
@@ -72,46 +75,74 @@ def group(lst, n):
     if len(val) == n:
       yield tuple(val)
 
+spectral_to_xyz = build_spectral_to_xyz()
+
+def spectral_to_linear_srgb(spectral):
+	return xyz_to_linear_srgb(spectral_to_xyz(spectral))
+
+def birefringence_spectrum_for_blackbody(temp):
+	spectrum = []
+	lagrange = np.arange(0, 1200, 5)
+	for lag in lagrange:
+		color = spectral_to_linear_srgb(lambda x : birefringence_lag(lag, x)*planck(x, temp))
+		spectrum.append(color)
+
+	spectrum = np.matrix(spectrum)
+	spectrum /= np.max(np.apply_along_axis(lambda x: linear_srgb_luminance(np.asarray(x).reshape(-1)), axis=1, arr=spectrum))
+
+	x_fuc = interp_func(lagrange, np.asarray(spectrum[:,0]).reshape(-1))
+	y_fuc = interp_func(lagrange, np.asarray(spectrum[:,1]).reshape(-1))
+	z_fuc = interp_func(lagrange, np.asarray(spectrum[:,2]).reshape(-1))
+	return lambda x: np.array([x_fuc(x), y_fuc(x), z_fuc(x)])
+
+def approximation_for_vals(vals):
+	def approximation(x):
+		funcval = np.power(np.sin(np.outer(vals[0:3], x)), 2)
+
+		mat = vals[3:].reshape((3,3)).T
+		funcval = mat.dot(funcval)
+
+		return funcval
+
+	return approximation
+
 def main():
-	flourescent_spectrum_1 = spectrum_from_csv('flourescent_spectrum.csv')
-	flourescent_spectrum_2 = spectrum_from_csv('flourescent_spectrum_2.csv')
-	flourescent_spectrum_3 = spectrum_from_csv('flourescent_spectrum_3.csv')
+	blackbody_12000K_func = birefringence_spectrum_for_blackbody(12000)
+	print(blackbody_12000K_func(0))
 
-	spectral_to_xyz = build_spectral_to_xyz()
+	x0 = [0.00509906, 0.00580413, 0.00707829,
+		1, 0, 0,
+		0, 1, 0,
+		0, 0, 1]
 
-	def spectral_to_linear_srgb(spectral):
-		return xyz_to_linear_srgb(spectral_to_xyz(spectral))
+	def objective(vals):
+		approx = approximation_for_vals(vals)
+		def integrand(x):
+			standard = np.linalg.norm(blackbody_12000K_func(x) - approx(x), np.inf)
+			deriv = np.linalg.norm(misc.derivative(blackbody_12000K_func, x, dx=1e-6) - misc.derivative(approx, x, dx=1e-6), np.inf)
+			return standard + deriv*200.0
+		return integrate.fixed_quad(integrand, 0, 1200, n=10000)[0]
 
-	def build_birefringence_spectrum(light_source):
+	result = optimize.minimize(objective, np.array(x0), method='Powell', options={'maxiter': 1000})
+	start_approx = approximation_for_vals(x0)
+	final_approx = approximation_for_vals(result.x)
+	print(final_approx(0))
+	print(result)
+
+	def print_birefringence_spectrum(formula):
 		spectrum = []
 		maxcol = 0
-		for lag in np.arange(0, 2000, 15/2):
-			color = spectral_to_linear_srgb(lambda x : birefringence_lag(lag, x)*light_source(x))
-			maxcol = max(linear_srgb_luminance(color), maxcol)
-			spectrum.append(color)
+		for lag in np.arange(0, 1200, 5):
+			spectrum.append(formula(lag))
 
 		spectrum_string = ""
 		for color1, color2 in group(spectrum, 2):
-			color1 /= maxcol*1.1
-			color2 /= maxcol*1.1
 			spectrum_string += srgb_to_termstring(linear_srgb_to_rgb(color1), linear_srgb_to_rgb(color2))
-		return spectrum_string+"\n"+spectrum_string+"\n"+spectrum_string
+		print(spectrum_string)
+		print(spectrum_string)
 
-	blackbody_12000K = lambda x: planck(x, 12000)
-	blackbody_7500K = lambda x: planck(x, 7500)
-	blackbody_5000K = lambda x: planck(x, 5000)
-	blackbody_2500K = lambda x: planck(x, 2500)
-
-	print()
-	# print(build_birefringence_spectrum(flourescent_spectrum_3))
-	print(build_birefringence_spectrum(blackbody_12000K))
-	print(build_birefringence_spectrum(blackbody_7500K))
-	print(build_birefringence_spectrum(blackbody_5000K))
-	# print(build_birefringence_spectrum(flourescent_spectrum_1))
-	# print(build_birefringence_spectrum(flourescent_spectrum_2))
-	# print(build_birefringence_spectrum(blackbody_2500K))
-	print()
-
+	print_birefringence_spectrum(blackbody_12000K_func)
+	print_birefringence_spectrum(final_approx)
 
 
 if __name__ == "__main__":
