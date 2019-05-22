@@ -34,14 +34,14 @@ def normalize_rgb(rgb):
 
 def linear_srgb_to_rgb(rgb):
 	nonlinearity = np.vectorize(lambda x: 12.92*x if x < 0.0031308 else 1.055*(x**(1.0/2.4))-0.055)
-	return nonlinearity(rgb)
+	return np.clip(nonlinearity(rgb), 0, 1)
 
 def srgb_to_termstring(rgb):
 	rgb = (rgb*255).flat
-	return "\x1b[48;2;%d;%d;%dm    \x1b[0m" % (int(rgb[0]), int(rgb[1]), int(rgb[2]))
+	return "\x1b[48;2;%d;%d;%dm \x1b[0m" % (int(rgb[0]), int(rgb[1]), int(rgb[2]))
 
 #from https://scipython.com/blog/converting-a-spectrum-to-a-colour/
-from scipy.constants import h, c, k
+from scipy.constants import h, c, k, pi
 def planck(lam, T):
 	""" Returns the spectral radiance of a black body at temperature T.
 
@@ -55,6 +55,9 @@ def planck(lam, T):
 	B = 2*h*c**2/lam_m**5 / (np.exp(fac) - 1)
 	return B
 
+def birefringence_lag(lag, lam):
+	return np.sin(pi*lag/lam)**2
+
 def spectrum_from_csv(csvfile):
 	data = np.genfromtxt(csvfile, delimiter=',')
 	return interp_func(data[:,0], data[:,1])
@@ -66,16 +69,37 @@ def main():
 
 	spectral_to_xyz = build_spectral_to_xyz()
 
-	spectral_to_linear_srgb = lambda spectral: normalize_rgb(xyz_to_linear_srgb(spectral_to_xyz(spectral)))
+	def spectral_to_linear_srgb(spectral):
+		return xyz_to_linear_srgb(spectral_to_xyz(spectral))
 
-	for temp in range(500, 12000+1, 500):
-		color1 = srgb_to_termstring(spectral_to_linear_srgb(lambda x : planck(x, temp)))
-		color2 = srgb_to_termstring(linear_srgb_to_rgb(spectral_to_linear_srgb(lambda x : planck(x, temp))))
-		print(color1, color2, "%dK" % temp)
+	def build_birefringence_spectrum(light_source):
+		spectrum = []
+		maxcol = 0
+		for lag in range(0, 2000, 15):
+			color = spectral_to_linear_srgb(lambda x : birefringence_lag(lag, x)*light_source(x))
+			maxcol = max(np.max(color), maxcol)
+			spectrum.append(color)
+
+		spectrum_string = ""
+		for color in spectrum:
+			color /= maxcol
+			spectrum_string += srgb_to_termstring(linear_srgb_to_rgb(color))
+		return spectrum_string+"\n"+spectrum_string
+
+	blackbody_12000K = lambda x: planck(x, 12000)
+	blackbody_7500K = lambda x: planck(x, 7500)
+	blackbody_5000K = lambda x: planck(x, 5000)
+	blackbody_2500K = lambda x: planck(x, 2500)
+
+	print(build_birefringence_spectrum(blackbody_12000K))
+	print(build_birefringence_spectrum(blackbody_7500K))
+	print(build_birefringence_spectrum(blackbody_5000K))
+	print(build_birefringence_spectrum(blackbody_2500K))
+	print(build_birefringence_spectrum(flourescent_spectrum_3))
+	print(build_birefringence_spectrum(flourescent_spectrum_1))
+	print(build_birefringence_spectrum(flourescent_spectrum_2))
 
 
-	for flourescent_spectrum in [flourescent_spectrum_1, flourescent_spectrum_2, flourescent_spectrum_3]:
-		print(srgb_to_termstring(spectral_to_linear_srgb(flourescent_spectrum)), srgb_to_termstring(linear_srgb_to_rgb(spectral_to_linear_srgb(flourescent_spectrum))))
 
 if __name__ == "__main__":
 	main();
