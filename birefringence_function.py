@@ -39,9 +39,10 @@ def linear_srgb_to_rgb(rgb):
 	nonlinearity = np.vectorize(lambda x: 12.92*x if x < 0.0031308 else 1.055*(x**(1.0/2.4))-0.055)
 	return np.clip(nonlinearity(rgb), 0, 1)
 
-def srgb_to_termstring(rgb):
+def srgb_to_termstring(rgb, rgb2):
 	rgb = (rgb*255).flat
-	return "\x1b[48;2;%d;%d;%dm \x1b[0m" % (int(rgb[0]), int(rgb[1]), int(rgb[2]))
+	rgb2 = (rgb2*255).flat
+	return "\x1b[38;2;%d;%d;%dm\x1b[48;2;%d;%d;%dm▌\x1b[0m" % (int(rgb[0]), int(rgb[1]), int(rgb[2]), int(rgb2[0]), int(rgb2[1]), int(rgb2[2]))
 
 #from https://scipython.com/blog/converting-a-spectrum-to-a-colour/
 from scipy.constants import h, c, k, pi
@@ -65,6 +66,12 @@ def spectrum_from_csv(csvfile):
 	data = np.genfromtxt(csvfile, delimiter=',')
 	return interp_func(data[:,0], data[:,1])
 
+def group(lst, n):
+  for i in range(0, len(lst), n):
+    val = lst[i:i+n]
+    if len(val) == n:
+      yield tuple(val)
+
 def main():
 	flourescent_spectrum_1 = spectrum_from_csv('flourescent_spectrum.csv')
 	flourescent_spectrum_2 = spectrum_from_csv('flourescent_spectrum_2.csv')
@@ -78,16 +85,17 @@ def main():
 	def build_birefringence_spectrum(light_source):
 		spectrum = []
 		maxcol = 0
-		for lag in range(0, 2000, 15):
+		for lag in np.arange(0, 2000, 15/2):
 			color = spectral_to_linear_srgb(lambda x : birefringence_lag(lag, x)*light_source(x))
 			maxcol = max(linear_srgb_luminance(color), maxcol)
 			spectrum.append(color)
 
 		spectrum_string = ""
-		for color in spectrum:
-			color /= maxcol*1.1
-			spectrum_string += srgb_to_termstring(linear_srgb_to_rgb(color))
-		return spectrum_string+"\n"+spectrum_string
+		for color1, color2 in group(spectrum, 2):
+			color1 /= maxcol*1.1
+			color2 /= maxcol*1.1
+			spectrum_string += srgb_to_termstring(linear_srgb_to_rgb(color1), linear_srgb_to_rgb(color2))
+		return spectrum_string
 
 	blackbody_12000K = lambda x: planck(x, 12000)
 	blackbody_7500K = lambda x: planck(x, 7500)
