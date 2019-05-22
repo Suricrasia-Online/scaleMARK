@@ -10,7 +10,7 @@ def spectral_dot(func1, func2):
 	# spectral integration ranges
 	xmin = 380
 	xmax = 780
-	return integrate.fixed_quad(lambda x : func1(x) * func2(x), xmin, xmax, n=1000)[0]
+	return integrate.fixed_quad(lambda x : func1(x) * func2(x), xmin, xmax, n=5000)[0]
 
 def build_spectral_to_xyz():
 	color_matching_data = np.genfromtxt('lin2012xyz2e_1_7sf.csv', delimiter=',')
@@ -95,20 +95,22 @@ def main():
 			color1 /= maxcol*1.1
 			color2 /= maxcol*1.1
 			spectrum_string += srgb_to_termstring(linear_srgb_to_rgb(color1), linear_srgb_to_rgb(color2))
-		return spectrum_string
+		return spectrum_string+"\n"+spectrum_string+"\n"+spectrum_string
 
 	blackbody_12000K = lambda x: planck(x, 12000)
 	blackbody_7500K = lambda x: planck(x, 7500)
 	blackbody_5000K = lambda x: planck(x, 5000)
 	blackbody_2500K = lambda x: planck(x, 2500)
 
+	print()
+	# print(build_birefringence_spectrum(flourescent_spectrum_3))
 	print(build_birefringence_spectrum(blackbody_12000K))
 	print(build_birefringence_spectrum(blackbody_7500K))
 	print(build_birefringence_spectrum(blackbody_5000K))
-	print(build_birefringence_spectrum(blackbody_2500K))
-	print(build_birefringence_spectrum(flourescent_spectrum_3))
-	print(build_birefringence_spectrum(flourescent_spectrum_1))
-	print(build_birefringence_spectrum(flourescent_spectrum_2))
+	# print(build_birefringence_spectrum(flourescent_spectrum_1))
+	# print(build_birefringence_spectrum(flourescent_spectrum_2))
+	# print(build_birefringence_spectrum(blackbody_2500K))
+	print()
 
 
 
