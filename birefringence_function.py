@@ -32,6 +32,9 @@ def normalize_rgb(rgb):
 		rgb /= np.max(rgb) #normalize (you're not normally supposed to do this...)
 	return rgb
 
+def linear_srgb_luminance(rgb):
+	return np.average(rgb, weights=[0.213, 0.715, 0.072], axis=1)
+
 def linear_srgb_to_rgb(rgb):
 	nonlinearity = np.vectorize(lambda x: 12.92*x if x < 0.0031308 else 1.055*(x**(1.0/2.4))-0.055)
 	return np.clip(nonlinearity(rgb), 0, 1)
@@ -77,12 +80,12 @@ def main():
 		maxcol = 0
 		for lag in range(0, 2000, 15):
 			color = spectral_to_linear_srgb(lambda x : birefringence_lag(lag, x)*light_source(x))
-			maxcol = max(np.max(color), maxcol)
+			maxcol = max(linear_srgb_luminance(color), maxcol)
 			spectrum.append(color)
 
 		spectrum_string = ""
 		for color in spectrum:
-			color /= maxcol
+			color /= maxcol*1.1
 			spectrum_string += srgb_to_termstring(linear_srgb_to_rgb(color))
 		return spectrum_string+"\n"+spectrum_string
 
