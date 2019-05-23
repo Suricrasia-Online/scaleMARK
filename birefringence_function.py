@@ -108,7 +108,6 @@ def approximation_for_vals(vals):
 
 def main():
 	blackbody_12000K_func = birefringence_spectrum_for_blackbody(12000)
-	print(blackbody_12000K_func(0))
 
 	x0 = [0.00509906, 0.00580413, 0.00707829,
 		1, 0, 0,
@@ -126,7 +125,6 @@ def main():
 	result = optimize.minimize(objective, np.array(x0), method='Powell', options={'maxiter': 1000})
 	start_approx = approximation_for_vals(x0)
 	final_approx = approximation_for_vals(result.x)
-	print(final_approx(0))
 	print(result)
 
 	def print_birefringence_spectrum(formula):
