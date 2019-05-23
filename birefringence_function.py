@@ -129,11 +129,10 @@ def main():
 		approx = approximation_for_vals(vals)
 		def integrand(x):
 			standard = np.linalg.norm(blackbody_12000K_func(x) - approx(x), np.inf)
-			deriv = np.linalg.norm(misc.derivative(blackbody_12000K_func, x, dx=1e-6) - misc.derivative(approx, x, dx=1e-6), np.inf)
-			return standard + deriv*100.0
+			return standard
 		return integrate.fixed_quad(integrand, 0, 1200, n=10000)[0]
 
-	result = optimize.differential_evolution(objective, [(0.1,0.9),(0.1,0.9),(0.1,0.9),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2)], callback=lambda xk,convergence: print_birefringence_spectrum(approximation_for_vals(xk)))
+	result = optimize.differential_evolution(objective, [(0,1),(0,1),(0,1),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2)], popsize=50, callback=lambda xk,convergence: print_birefringence_spectrum(approximation_for_vals(xk)))
 	start_approx = approximation_for_vals(x0)
 	final_approx = approximation_for_vals(result.x)
 	print(result)
