@@ -82,7 +82,7 @@ def spectral_to_linear_srgb(spectral):
 
 def birefringence_spectrum_for_blackbody(temp):
 	spectrum = []
-	lagrange = np.arange(0, 1200, 5)
+	lagrange = np.arange(0, 1200*2, 5)
 	for lag in lagrange:
 		color = spectral_to_linear_srgb(lambda x : birefringence_lag(lag, x)*planck(x, temp))
 		spectrum.append(color)
@@ -106,6 +106,17 @@ def approximation_for_vals(vals):
 
 	return approximation
 
+def print_birefringence_spectrum(formula):
+	spectrum = []
+	maxcol = 0
+	for lag in np.arange(0, 1200*2, 10):
+		spectrum.append(formula(lag))
+
+	spectrum_string = ""
+	for color1, color2 in group(spectrum, 2):
+		spectrum_string += srgb_to_termstring(linear_srgb_to_rgb(color1), linear_srgb_to_rgb(color2))
+	print(spectrum_string)
+
 def main():
 	blackbody_12000K_func = birefringence_spectrum_for_blackbody(12000)
 
@@ -119,25 +130,14 @@ def main():
 		def integrand(x):
 			standard = np.linalg.norm(blackbody_12000K_func(x) - approx(x), np.inf)
 			deriv = np.linalg.norm(misc.derivative(blackbody_12000K_func, x, dx=1e-6) - misc.derivative(approx, x, dx=1e-6), np.inf)
-			return standard + deriv*200.0
+			return standard + deriv*100.0
 		return integrate.fixed_quad(integrand, 0, 1200, n=10000)[0]
 
-	result = optimize.minimize(objective, np.array(x0), method='Powell', options={'maxiter': 1000})
+	result = optimize.differential_evolution(objective, [(0.1,0.9),(0.1,0.9),(0.1,0.9),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2)], callback=lambda xk,convergence: print_birefringence_spectrum(approximation_for_vals(xk)))
 	start_approx = approximation_for_vals(x0)
 	final_approx = approximation_for_vals(result.x)
 	print(result)
 
-	def print_birefringence_spectrum(formula):
-		spectrum = []
-		maxcol = 0
-		for lag in np.arange(0, 1200, 5):
-			spectrum.append(formula(lag))
-
-		spectrum_string = ""
-		for color1, color2 in group(spectrum, 2):
-			spectrum_string += srgb_to_termstring(linear_srgb_to_rgb(color1), linear_srgb_to_rgb(color2))
-		print(spectrum_string)
-		print(spectrum_string)
 
 	print_birefringence_spectrum(blackbody_12000K_func)
 	print_birefringence_spectrum(final_approx)
