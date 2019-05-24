@@ -4,6 +4,10 @@
 #include <fstream>
 #include <vector>
 #include <iterator>
+#include <unistd.h>
+
+static const int channels = 2;
+static const int frame_size_120ms = 5760;
 
 int check_opus_error(int error) {
 	if (error < OPUS_OK) {
@@ -13,7 +17,7 @@ int check_opus_error(int error) {
 	return 0;
 }
 
-std::vector<char> read_samples(std::string filename) {
+std::vector<char> read_samples(const std::string& filename) {
 	std::ifstream sampleReader(filename, std::ios::binary);
 
 	std::istreambuf_iterator<char> start(sampleReader);
@@ -22,37 +26,105 @@ std::vector<char> read_samples(std::string filename) {
 	return std::vector<char>(start, end);
 }
 
+std::vector<unsigned char> encode_packet(const std::vector<char>& pcm, int sizelimit, int rounds, const std::vector<int>& encoder_ctl, int* error) {
+	std::vector<unsigned char> packet(sizelimit);
+
+	//create encoder
+	auto encoder = opus_encoder_create(48000, channels, OPUS_APPLICATION_VOIP, error);
+	if (*error < OPUS_OK) return packet;
+
+	//set encoder settings
+	for(auto ctl = encoder_ctl.begin(); ctl != encoder_ctl.end(); ctl++) {
+		opus_encoder_ctl(encoder, *ctl);
+	}
+
+	//cast data to opus_int16
+	auto pcm_raw_frame_size = pcm.size() / sizeof(opus_int16) / channels;
+	auto pcm_raw = reinterpret_cast<const opus_int16*>(pcm.data());
+
+	if (pcm_raw_frame_size < frame_size_120ms) {
+		std::cerr << "PCM data doesn't contain enough samples" << std::endl;
+		*error = OPUS_BAD_ARG;
+		return packet;
+	}
+
+	//encode multiple times (or just once) to fool the encoder into using prediction
+	int length = 0;
+	for (int i = 0; i < rounds; i++) {
+		length = opus_encode(encoder, pcm_raw, frame_size_120ms, packet.data(), packet.capacity());
+		if (length < 0) {
+			*error = length;
+			return packet;
+		}
+	}
+	packet.resize(length);
+
+	return packet;
+}
+
 int main(int argc, char** argv) {
 	int error;
 
-	//create encoder
-	const int channels = 2;
-	auto encoder = opus_encoder_create(48000, channels, OPUS_APPLICATION_AUDIO, &error);
+	//load samples from file
+	auto VY00RGLYL = read_samples("./VY00RGYL.raw");
+	auto JOUVERT = read_samples("./JOUVERT.raw");
+	auto SILENCE = read_samples("./silence.raw");
+	auto RINGTONE = read_samples("./ringtone.raw");
+
+	auto voicectl = std::vector<int>({
+		OPUS_SET_BITRATE(4000),
+		OPUS_SET_COMPLEXITY(10),
+		OPUS_SET_BANDWIDTH(OPUS_BANDWIDTH_MEDIUMBAND),
+		OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE),
+		OPUS_SET_APPLICATION(OPUS_APPLICATION_VOIP)
+	});
+
+	auto musicctl = std::vector<int>({
+		OPUS_SET_BITRATE(4000),
+		OPUS_SET_COMPLEXITY(5),
+		OPUS_SET_VBR(0),
+		OPUS_SET_BANDWIDTH(OPUS_BANDWIDTH_FULLBAND),
+		OPUS_SET_SIGNAL(OPUS_SIGNAL_MUSIC),
+		OPUS_SET_APPLICATION(OPUS_APPLICATION_AUDIO)
+	});
+
+	//encode samples
+	auto VY00RGLYL_packet = encode_packet(VY00RGLYL, 150, 1, voicectl, &error);
 	if (check_opus_error(error)) return -1;
 
-	opus_encoder_ctl(encoder, OPUS_SET_BITRATE(4000));
-	opus_encoder_ctl(encoder, OPUS_SET_COMPLEXITY(10));
-	opus_encoder_ctl(encoder, OPUS_SET_BANDWIDTH(OPUS_BANDWIDTH_FULLBAND));
-	opus_encoder_ctl(encoder, OPUS_SET_VBR(0));
+	auto JOUVERT_packet = encode_packet(JOUVERT, 120, 2, voicectl, &error);
+	if (check_opus_error(error)) return -1;
 
-	auto samples = read_samples("./sample.raw");
+	auto SILENCE_packet = encode_packet(SILENCE, 20, 2, voicectl, &error);
+	if (check_opus_error(error)) return -1;
 
-	auto samples_16_frame_size = samples.size() / sizeof(opus_int16) / channels;
-	auto samples_16 = reinterpret_cast<const opus_int16*>(samples.data());
+	auto RINGTONE_packet = encode_packet(RINGTONE, 150, 2, musicctl, &error);
+	if (check_opus_error(error)) return -1;
 
-	std::vector<unsigned char> output_packet(500);
+	//decode the packet back to audio
+	auto decoder = opus_decoder_create(48000, 2, &error);
+	opus_decoder_ctl(decoder, OPUS_SET_GAIN(-500));
+	std::cerr << VY00RGLYL_packet.size() << std::endl;
+	std::cerr << JOUVERT_packet.size() << std::endl;
+	std::cerr << SILENCE_packet.size() << std::endl;
+	std::cerr << RINGTONE_packet.size() << std::endl;
 
-	const int frame_size_120ms = 5760;
-	if (samples_16_frame_size < frame_size_120ms) {
-		std::cerr << "sample doesn't contain enough samples" << std::endl;
+	//generate 16 samples using the encoded data
+	for (int i = 0; i < 112; i++) {
+		std::vector<unsigned char> packet = SILENCE_packet;
+		if (i%4 == 0 && i != 48) packet = VY00RGLYL_packet;
+		if (i%4 == 2 && i > 32) packet = JOUVERT_packet;
+		if (i%4 == 3 && (i/4)%4 == 0 && i > 32 && i < 40) packet = JOUVERT_packet;
+		if (i%4 == 1 && (i/4)%4 == 0 && i > 40) packet = JOUVERT_packet;
+		if (i == 73) packet = JOUVERT_packet;
+		if (i >= 74 && i < 80) packet = SILENCE_packet;
+		if (i == 74 || i == 75 || i == 76) packet = RINGTONE_packet;
+		std::vector<opus_int16> decoded_payload(frame_size_120ms*channels);
+		int length = opus_decode(decoder, packet.data(), packet.size(), decoded_payload.data(), frame_size_120ms, 0);
+		if (check_opus_error(length)) return -1;
+		decoded_payload.resize(length*2);
+		write(1, reinterpret_cast<const char*>(decoded_payload.data()), decoded_payload.size() * sizeof(opus_int16));
 	}
-
-	// try encoding something
-	int length = opus_encode(encoder, samples_16, frame_size_120ms, output_packet.data(), output_packet.capacity());
-	if (check_opus_error(length)) return -1;
-	output_packet.resize(length);
-
-	std::cout << "Size of encoded packet: " << length << std::endl;
 
 	return 0;
 }
