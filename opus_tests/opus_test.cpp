@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
 	auto JOUVERT = read_samples("./JOUVERT.raw");
 	auto SILENCE = read_samples("./silence.raw");
 	auto RINGTONE = read_samples("./ringtone.raw");
+	auto UHH = read_samples("./uhh.raw");
 
 	auto voicectl = std::vector<int>({
 		OPUS_SET_BITRATE(4000),
@@ -98,8 +99,12 @@ int main(int argc, char** argv) {
 	auto SILENCE_packet = encode_packet(SILENCE, 20, 2, voicectl, &error);
 	if (check_opus_error(error)) return -1;
 
-	auto RINGTONE_packet = encode_packet(RINGTONE, 150, 2, musicctl, &error);
+	auto RINGTONE_packet = encode_packet(RINGTONE, 150, 6, musicctl, &error);
 	if (check_opus_error(error)) return -1;
+
+	auto UHH_packet = encode_packet(UHH, 150, 1, voicectl, &error);
+	if (check_opus_error(error)) return -1;
+
 
 	//decode the packet back to audio
 	auto decoder = opus_decoder_create(48000, 2, &error);
@@ -108,6 +113,7 @@ int main(int argc, char** argv) {
 	std::cerr << JOUVERT_packet.size() << std::endl;
 	std::cerr << SILENCE_packet.size() << std::endl;
 	std::cerr << RINGTONE_packet.size() << std::endl;
+	std::cerr << UHH_packet.size() << std::endl;
 
 	//generate 16 samples using the encoded data
 	for (int i = 0; i < 112; i++) {
@@ -116,9 +122,10 @@ int main(int argc, char** argv) {
 		if (i%4 == 2 && i > 32) packet = JOUVERT_packet;
 		if (i%4 == 3 && (i/4)%4 == 0 && i > 32 && i < 40) packet = JOUVERT_packet;
 		if (i%4 == 1 && (i/4)%4 == 0 && i > 40) packet = JOUVERT_packet;
-		if (i == 73) packet = JOUVERT_packet;
-		if (i >= 74 && i < 80) packet = SILENCE_packet;
-		if (i == 74 || i == 75 || i == 76) packet = RINGTONE_packet;
+		if (i == 89) packet = JOUVERT_packet;
+		if (i >= 90-2 && i < 96) packet = SILENCE_packet;
+		if (i == 90 || i == 91 || i == 92) packet = RINGTONE_packet;
+		if (i == 95) packet = UHH_packet;
 		std::vector<opus_int16> decoded_payload(frame_size_120ms*channels);
 		int length = opus_decode(decoder, packet.data(), packet.size(), decoded_payload.data(), frame_size_120ms, 0);
 		if (check_opus_error(length)) return -1;
