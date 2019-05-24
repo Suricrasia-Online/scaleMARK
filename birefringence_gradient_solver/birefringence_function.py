@@ -82,7 +82,7 @@ def spectral_to_linear_srgb(spectral):
 
 def birefringence_spectrum_for_blackbody(temp):
 	spectrum = []
-	lagrange = np.arange(0, 1200*2, 5)
+	lagrange = np.arange(0, 1200, 5)
 	for lag in lagrange:
 		color = spectral_to_linear_srgb(lambda x : birefringence_lag(lag, x)*planck(x, temp))
 		spectrum.append(color)
@@ -109,7 +109,7 @@ def approximation_for_vals(vals):
 def print_birefringence_spectrum(formula):
 	spectrum = []
 	maxcol = 0
-	for lag in np.arange(0, 1200*2, 10):
+	for lag in np.arange(0, 1200, 5):
 		spectrum.append(formula(lag))
 
 	spectrum_string = ""
@@ -128,11 +128,11 @@ def main():
 	def objective(vals):
 		approx = approximation_for_vals(vals)
 		def integrand(x):
-			standard = np.linalg.norm(blackbody_12000K_func(x) - approx(x), np.inf)
+			standard = np.linalg.norm(blackbody_12000K_func(x) - approx(x))
 			return standard
 		return integrate.fixed_quad(integrand, 0, 1200, n=10000)[0]
 
-	result = optimize.differential_evolution(objective, [(0,1),(0,1),(0,1),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2)], popsize=50, callback=lambda xk,convergence: print_birefringence_spectrum(approximation_for_vals(xk)))
+	result = optimize.differential_evolution(objective, [(0,0.1),(0,0.1),(0,0.1),(-2,2),(-2,0),(-2,0),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2),(-2,2)], callback=lambda xk,convergence: print_birefringence_spectrum(approximation_for_vals(xk)))
 	start_approx = approximation_for_vals(x0)
 	final_approx = approximation_for_vals(result.x)
 	print(result)
