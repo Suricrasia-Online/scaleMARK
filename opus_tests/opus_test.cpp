@@ -116,16 +116,14 @@ int main(int argc, char** argv) {
 	std::cerr << UHH_packet.size() << std::endl;
 
 	// VY00RGLYL_packet[120]--;
-
 	//generate 16 samples using the encoded data
-	for (int i = 0; i < 320+8+32+16+16+64; i++) {
-
+	for (int i = 0; i < 320-8+8+32+16+16+64; i++) {
 		std::vector<unsigned char> packet = SILENCE_packet;
 		if (i%4 == 0 && i != 48 && i != 160-16 && (i < 176 || i >= 192)) packet = VY00RGLYL_packet;
-		if (i%4 == 2 && i > 32 && i < 320+8+16+16+16+16) packet = JOUVERT_packet;
+		if (i%4 == 2 && i > 32 && i < 320-8+8+16+16+16+16) packet = JOUVERT_packet;
 		if (i > 40) {
-			if (i%4 == 3 && (i/4)%4 == 0 && (i/16)%4 < 2 && i < 320+8) packet = JOUVERT_packet;
-			if (i%4 == 1 && (i/4)%4 == 0 && (i/16)%4 >= 2 && i < 320+8) packet = JOUVERT_packet;
+			if (i%4 == 3 && (i/4)%4 == 0 && (i/16)%4 < 2 && i < 320-8+8) packet = JOUVERT_packet;
+			if (i%4 == 1 && (i/4)%4 == 0 && (i/16)%4 >= 2 && i < 320-8+8) packet = JOUVERT_packet;
 		}
 		if (i%4 == 3 && (i/4)%4 < 2 && i > 94 && (i/16)%4 >= 2 && i <= 256) packet = RINGTONE_packet;
 		if (i%4 == 1 && (i/4)%4 < 2 && i > 94 && (i/16)%4 < 2 && i <= 256) packet = RINGTONE_packet;
@@ -135,11 +133,13 @@ int main(int argc, char** argv) {
 		if (i == 95) packet = UHH_packet;
 		if (i == 97) packet = JOUVERT_packet;
 		if (i == 192-1) packet = UHH_packet;
-		if (i%4 < 3 && i > 192 && (i/4)%4 == 0 && i < 320+8) packet = VY00RGLYL_packet;
-		if (i%4 > 0 && i > 256 && (i/4)%4 == 0 && i < 320+8) packet = RINGTONE_packet;
-		if (i > 320 && i < 320+8) packet = VY00RGLYL_packet;
-		if (i >= 320+8+32+16+16) packet = SILENCE_packet;
-		if (i > 320+8 && (i/4)%2 == 1) packet = SILENCE_packet;
+		if (i%4 < 3 && i > 192 && (i/4)%4 == 0 && i < 320-8+8) packet = VY00RGLYL_packet;
+		if (i%8 > 2 && i%8<7 && i > 256 && (i/4)%4 < 2 && i < 320-8+8) packet = RINGTONE_packet;
+		if (i > 320-8 && i < 320-8+8) packet = VY00RGLYL_packet;
+		if (i >= 320-8+8+32+16+16) packet = SILENCE_packet;
+		if (i > 320-8+8 && (i/4)%2 == 1) packet = SILENCE_packet;
+		//corruption >;3c
+		if (packet.size() > 100 && i > 192) packet[((i-16*2)%20)+50]--;
 		std::vector<opus_int16> decoded_payload(frame_size_120ms*channels);
 		int length = opus_decode(decoder, packet.data(), packet.size(), decoded_payload.data(), frame_size_120ms, 0);
 		if (check_opus_error(length)) return -1;
