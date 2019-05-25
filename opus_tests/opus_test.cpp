@@ -93,39 +93,45 @@ int main(int argc, char** argv) {
 	auto VY00RGLYL_packet = encode_packet(VY00RGLYL, 150, 1, voicectl, &error);
 	if (check_opus_error(error)) return -1;
 
-	auto JOUVERT_packet = encode_packet(JOUVERT, 120, 2, voicectl, &error);
+	auto JOUVERT_packet = encode_packet(JOUVERT, 120, 4, voicectl, &error);
 	if (check_opus_error(error)) return -1;
 
 	auto SILENCE_packet = encode_packet(SILENCE, 20, 2, voicectl, &error);
 	if (check_opus_error(error)) return -1;
 
-	auto RINGTONE_packet = encode_packet(RINGTONE, 150, 6, musicctl, &error);
+	auto RINGTONE_packet = encode_packet(RINGTONE, 120, 6, musicctl, &error);
 	if (check_opus_error(error)) return -1;
 
-	auto UHH_packet = encode_packet(UHH, 150, 1, voicectl, &error);
+	auto UHH_packet = encode_packet(UHH, 150, 2, voicectl, &error);
 	if (check_opus_error(error)) return -1;
 
 
 	//decode the packet back to audio
 	auto decoder = opus_decoder_create(48000, 2, &error);
-	opus_decoder_ctl(decoder, OPUS_SET_GAIN(-500));
+	// opus_decoder_ctl(decoder, OPUS_SET_GAIN(-2000));
 	std::cerr << VY00RGLYL_packet.size() << std::endl;
 	std::cerr << JOUVERT_packet.size() << std::endl;
 	std::cerr << SILENCE_packet.size() << std::endl;
 	std::cerr << RINGTONE_packet.size() << std::endl;
 	std::cerr << UHH_packet.size() << std::endl;
 
+	// VY00RGLYL_packet[120]--;
+
 	//generate 16 samples using the encoded data
-	for (int i = 0; i < 112; i++) {
+	for (int i = 0; i < 164; i++) {
+
 		std::vector<unsigned char> packet = SILENCE_packet;
 		if (i%4 == 0 && i != 48) packet = VY00RGLYL_packet;
 		if (i%4 == 2 && i > 32) packet = JOUVERT_packet;
-		if (i%4 == 3 && (i/4)%4 == 0 && i > 32 && i < 40) packet = JOUVERT_packet;
-		if (i%4 == 1 && (i/4)%4 == 0 && i > 40) packet = JOUVERT_packet;
+		if (i > 40) {
+			if (i%4 == 3 && (i/4)%4 == 0 && (i/16)%4 < 2) packet = JOUVERT_packet;
+			if (i%4 == 1 && (i/4)%4 == 0 && (i/16)%4 >= 2) packet = JOUVERT_packet;
+		}
 		if (i == 89) packet = JOUVERT_packet;
 		if (i >= 90-2 && i < 96) packet = SILENCE_packet;
 		if (i == 90 || i == 91 || i == 92) packet = RINGTONE_packet;
 		if (i == 95) packet = UHH_packet;
+		if (i == 97) packet = JOUVERT_packet;
 		std::vector<opus_int16> decoded_payload(frame_size_120ms*channels);
 		int length = opus_decode(decoder, packet.data(), packet.size(), decoded_payload.data(), frame_size_120ms, 0);
 		if (check_opus_error(length)) return -1;
