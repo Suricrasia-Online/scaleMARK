@@ -27,7 +27,11 @@ shader.frag.min : shader.frag Makefile
 shader.h : shader.frag.min Makefile
 	mono ./shader_minifier.exe shader.frag.min -o shader.h
 
-postscript.h : postscript.ps
+postscript.ps.min : postscript.ps
+	cp postscript.ps postscript.ps.min
+	sed -i '/^%[^%!]/d' postscript.ps.min
+
+postscript.h : postscript.ps.min
 	xxd -i $< > $@
 
 $(PROJNAME).elf : $(PROJNAME).c shader.h postscript.h Makefile

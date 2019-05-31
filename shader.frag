@@ -52,7 +52,7 @@ float square(vec2 p, vec2 b)
 }
 
 float scene(vec3 p) {
-    float ruler = sdProfile(vec2(p.z,-square(p.xy, vec2(1.0,4.0))))-0.05;
+    float ruler = sdProfile(vec2(p.z,-square(p.xy, vec2(0.8,4.0))))-0.05;
     float ruler_hole = min(length(p.xy+vec2(0.0,3.0))-0.3, length(p.xy+vec2(0.0,-4.0))-0.1);
     return max(ruler,-ruler_hole);
 }
@@ -112,7 +112,7 @@ void phongShadeRay(inout Ray ray) {
         //oh god blackle clean this up
         ray.m_color += backlight(reflected,ray.m_lag)*0.8* (1.0 - frensel*0.98)*ray.m_attenuation;
         if (normal.z < -0.99) {
-	        ray.m_attenuation*=texture(tex,ray.m_point.xy*0.1).x;
+	        ray.m_attenuation*=texture(tex,ray.m_point.yx/8.0-vec2(0.5,0.5)).x;
             // ray.m_attenuation*=0.0;
         }
         // if (normal.z < -0.99 && sin(ray.m_point.y*60.0)>0.8 && ray.m_point.x<-0.6+(sin(ray.m_point.y*60.0/5.0)>0.5?0.1:0.0)) {

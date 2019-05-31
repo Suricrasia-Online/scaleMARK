@@ -1,17 +1,34 @@
 %!PS-Adobe EPSF-3.0
 %%BoundingBox: 0 0 1024 1024
-/PrecisionPro {
+/s { //=string cvs show } def
+/f { findfont exch scalefont setfont } def
+/p {
 gsave
-/DejaVuSans findfont 80 scalefont setfont
+80 /DejaVuSans f
 /checkmark glyphshow
-/DejaVuSans-Italic findfont 40 scalefont setfont
--15 10 rmoveto (scale) show
-/DejaVuSans-Bold findfont 40 scalefont setfont
+40 /FreeSans-Italic f
+-25 10 rmoveto (scale) show
+40 /FreeSans-Bold f
 5 0 rmoveto (RITE) show
-/DejaVuSans findfont 40 scalefont setfont
--5 0 rmoveto
+18 /DejaVuSans f
+0 20 rmoveto
+/registered glyphshow
+100 -15 rmoveto
+24 /FreeSans-Italic f
+(for all your measuring needs) show
 /trademark glyphshow
 grestore
 } def
-10 10 moveto
-PrecisionPro
+200 490 moveto
+p
+40 590 moveto
+40 /DejaVuSans f
+(l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l) show
+50 410 moveto
+(i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l) show
+25 /FreeSans f
+60 580 moveto
+10 s
+975 465 moveto
+180 rotate
+(0         10        20       30       40        50       60       70       80       90       100     110     120) show

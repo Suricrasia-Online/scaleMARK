@@ -64,9 +64,9 @@ inline static int SYS_memfd_create(const char* name, unsigned int flags) {
 }
 
 inline static ssize_t SYS_write(int fd, const void *buf, size_t c) {
-  register ssize_t ret;
-  asm volatile("mov $4, %%eax\nint $0x80":"=a"(ret):"b"(fd),"c"(buf),"d"(c));
-  return ret;
+	register ssize_t ret;
+	asm volatile("mov $4, %%eax\nint $0x80":"=a"(ret):"b"(fd),"c"(buf),"d"(c));
+	return ret;
 }
 
 void render_postscript(unsigned char* postscript, unsigned int length, unsigned char** data, int* row_length) {
@@ -178,7 +178,7 @@ static void on_realize(GtkGLArea *glarea)
 
 	unsigned char* rendered_data;
 	int row_length;
-	render_postscript(postscript_ps, postscript_ps_len, &rendered_data, &row_length);
+	render_postscript(postscript_ps_min, postscript_ps_min_len, &rendered_data, &row_length);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, row_length/4, row_length/4, 0, GL_BGRA, GL_UNSIGNED_BYTE, rendered_data);
 
