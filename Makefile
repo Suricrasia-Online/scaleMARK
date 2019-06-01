@@ -35,7 +35,7 @@ postscript.h : postscript.ps.min
 	xxd -i $< > $@
 	sed -i 's/unsigned char/const unsigned char/' $@
 
-$(PROJNAME).elf : $(PROJNAME).c shader.h postscript.h Makefile
+$(PROJNAME).elf : $(PROJNAME).c shader.h postscript.h Makefile sys.h def.h
 	gcc -o $@ $< $(CFLAGS)
 
 $(PROJNAME)_unpacked : $(PROJNAME).elf

@@ -13,8 +13,9 @@
 #include <GL/glu.h>
 #include <GL/glext.h>
 
-#include <linux/memfd.h>
-#include <linux/fcntl.h>
+// #include <linux/memfd.h>
+// #include <linux/fcntl.h>
+#include "sys.h"
 
 #include <libspectre/spectre.h>
 #include "postscript.h"
@@ -29,16 +30,6 @@ const char* vshader = "#version 450\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xy
 #define DEBUG
 #define KEY_HANDLING
 
-inline void quit_asm() {
-	asm volatile(".intel_syntax noprefix");
-	asm volatile("xor edi, edi");
-	asm volatile("push 231"); //exit_group
-	asm volatile("pop rax");
-	asm volatile("syscall");
-	asm volatile(".att_syntax prefix");
-	__builtin_unreachable();
-}
-
 GLuint vao;
 GLuint p;
 GLuint renderedTex;
@@ -50,24 +41,12 @@ static gboolean check_escape(GtkWidget *widget, GdkEventKey *event)
 {
 	(void)widget;
 	if (event->keyval == GDK_KEY_Escape) {
-		quit_asm();
+		SYS_exit(0);
 	}
 
 	return FALSE;
 }
 #endif
-
-inline static int SYS_memfd_create(const char* name, unsigned int flags) {
-	register int ret;
-	asm volatile("mov $356, %%eax\nint $0x80":"=a"(ret):"b"(name),"c"(flags));
-	return ret;
-}
-
-inline static ssize_t SYS_write(int fd, const void *buf, size_t c) {
-	register ssize_t ret;
-	asm volatile("mov $4, %%eax\nint $0x80":"=a"(ret):"b"(fd),"c"(buf),"d"(c));
-	return ret;
-}
 
 void render_postscript(const unsigned char* postscript, unsigned int length, unsigned char** data, int* row_length) {
 	int fd = SYS_memfd_create("", 0);
@@ -75,7 +54,7 @@ void render_postscript(const unsigned char* postscript, unsigned int length, uns
 
 	char memfd_path[CHAR_BUFF_SIZE];
 	if (snprintf(memfd_path, CHAR_BUFF_SIZE, "/proc/self/fd/%d", fd) >= CHAR_BUFF_SIZE) {
-		quit_asm();
+		SYS_exit(0);
 	}
 
 	SpectreDocument* doc = spectre_document_new();
@@ -124,7 +103,7 @@ static void on_realize(GtkGLArea *glarea)
 		glGetShaderInfoLog(f, maxLength, &maxLength, error);
 		printf("%s\n", error);
 
-		quit_asm();
+		SYS_exit(0);
 	}
 #endif
 
@@ -143,7 +122,7 @@ static void on_realize(GtkGLArea *glarea)
 		glGetShaderInfoLog(v, maxLength, &maxLength, error);
 		printf("%s\n", error);
 
-		quit_asm();
+		SYS_exit(0);
 	}
 #endif
 
@@ -164,7 +143,7 @@ static void on_realize(GtkGLArea *glarea)
 		glGetProgramInfoLog(p, maxLength, &maxLength,error);
 		printf("%s\n", error);
 
-		quit_asm();
+		SYS_exit(0);
 	}
 #endif
 
@@ -224,5 +203,5 @@ void _start() {
 
 	gtk_main();
 
-	quit_asm();
+	SYS_exit(0);
 }
