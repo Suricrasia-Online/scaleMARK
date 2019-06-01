@@ -28,7 +28,7 @@ const char* vshader = "#version 450\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xy
 // #define DEBUG_VERTEX
 #define DEBUG_FRAGMENT
 // #define DEBUG_PROGRAM
-#define KEY_HANDLING
+// #define KEY_HANDLING
 
 GLuint vao;
 GLuint p;
@@ -74,6 +74,8 @@ on_render (GtkGLArea *glarea, GdkGLContext *context)
 	glActiveTexture(GL_TEXTURE0 + 0);
 	glBindTexture(GL_TEXTURE_2D, renderedTex);
 	glUniform1f(0, itime);
+
+	// if (itime > 16) gtk_main_quit();
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 

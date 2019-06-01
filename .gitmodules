@@ -4,3 +4,6 @@
 [submodule "vondehi"]
 	path = vondehi
 	url = https://gitlab.com/PoroCYon/vondehi.git
+[submodule "noelfver"]
+	path = noelfver
+	url = https://gitlab.com/blackle/noelfver

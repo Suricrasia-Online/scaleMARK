@@ -10,6 +10,11 @@ all : $(PROJNAME)
 packer : vondehi/vondehi.asm 
 	cd vondehi; nasm -fbin -o vondehi vondehi.asm
 
+.PHONY: noelfver
+
+noelfver:
+	make -C noelfver
+
 shader.frag.min : shader.frag Makefile
 	cp shader.frag shader.frag.min
 	sed -i 's/m_origin/o/g' shader.frag.min
@@ -41,15 +46,17 @@ $(PROJNAME).elf : $(PROJNAME).c shader.h postscript.h Makefile sys.h def.h
 $(PROJNAME)_unpacked : $(PROJNAME).elf
 	mv $< $@
 
-$(PROJNAME) : $(PROJNAME).elf.packed
+$(PROJNAME) : $(PROJNAME)_opt.elf.packed
 	mv $< $@
 	wc -c $(PROJNAME)
 
 #all the rest of these rules just takes a compiled elf file and generates a packed version of it with vondehi
-%_opt.elf : %.elf Makefile
+%_opt.elf : %.elf Makefile noelfver
 	cp $< $@
 	strip $@
 	strip -R .note -R .comment -R .eh_frame -R .eh_frame_hdr -R .note.gnu.build-id -R .got -R .got.plt -R .gnu.version -R .rela.dyn -R .shstrtab $@
+	./noelfver/noelfver $@ > $@.nover
+	mv $@.nover $@
 	#remove section header
 	./Section-Header-Stripper/section-stripper.py $@
 
