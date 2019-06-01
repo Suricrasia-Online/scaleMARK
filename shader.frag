@@ -151,7 +151,7 @@ vec2 Nth_weyl(int n) {
 }
 
 void main() {
-	polarized = iTime>4.;
+	polarized = iTime>8.;
 	// Normalized pixel coordinates (from -1 to 1)
 	vec2 uv_base = (gl_FragCoord.xy - vec2(960.0, 540.0))/vec2(960.0, 960.0);
 	float pixelsize = 1.0/1920.0*2.5;

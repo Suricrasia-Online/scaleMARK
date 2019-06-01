@@ -20,7 +20,7 @@ shader.frag.min : shader.frag Makefile
 	sed -i 's/m_lag/m/g' shader.frag.min
 
 	sed -i 's/MAXDEPTH/3/g' shader.frag.min
-	sed -i 's/SAMPLES/1/g' shader.frag.min
+	sed -i 's/SAMPLES/8/g' shader.frag.min
 
 	sed -i 's/\bRay\b/Co/g' shader.frag.min
 
@@ -33,6 +33,7 @@ postscript.ps.min : postscript.ps
 
 postscript.h : postscript.ps.min
 	xxd -i $< > $@
+	sed -i 's/unsigned char/const unsigned char/' $@
 
 $(PROJNAME).elf : $(PROJNAME).c shader.h postscript.h Makefile
 	gcc -o $@ $< $(CFLAGS)
@@ -42,6 +43,7 @@ $(PROJNAME)_unpacked : $(PROJNAME).elf
 
 $(PROJNAME) : $(PROJNAME).elf.packed
 	mv $< $@
+	wc -c $(PROJNAME)
 
 #all the rest of these rules just takes a compiled elf file and generates a packed version of it with vondehi
 %_opt.elf : %.elf Makefile

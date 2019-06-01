@@ -69,7 +69,7 @@ inline static ssize_t SYS_write(int fd, const void *buf, size_t c) {
 	return ret;
 }
 
-void render_postscript(unsigned char* postscript, unsigned int length, unsigned char** data, int* row_length) {
+void render_postscript(const unsigned char* postscript, unsigned int length, unsigned char** data, int* row_length) {
 	int fd = SYS_memfd_create("", 0);
 	SYS_write(fd, postscript, length);
 
