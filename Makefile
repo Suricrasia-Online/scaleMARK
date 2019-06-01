@@ -20,7 +20,7 @@ shader.frag.min : shader.frag Makefile
 	sed -i 's/m_lag/m/g' shader.frag.min
 
 	sed -i 's/MAXDEPTH/3/g' shader.frag.min
-	sed -i 's/SAMPLES/8/g' shader.frag.min
+	sed -i 's/SAMPLES/1/g' shader.frag.min
 
 	sed -i 's/\bRay\b/Co/g' shader.frag.min
 

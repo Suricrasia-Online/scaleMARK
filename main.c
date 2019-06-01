@@ -16,7 +16,6 @@
 #include "sys.h"
 
 #include <libspectre/spectre.h>
-#include "libspectre-private.h"
 #include "postscript.h"
 
 #include "shader.h"
@@ -56,9 +55,9 @@ static void render_postscript(const unsigned char* postscript, unsigned int leng
 	char memfd_path[CHAR_BUFF_SIZE];
 	sprintf(memfd_path, "/proc/self/fd/%d", fd);
 
-	SpectreDocument doc;
-	spectre_document_load(&doc, memfd_path);
-	spectre_document_render(&doc, data, row_length);
+	SpectreDocument* doc = spectre_document_new();
+	spectre_document_load(doc, memfd_path);
+	spectre_document_render(doc, data, row_length);
 }
 
 static gboolean
