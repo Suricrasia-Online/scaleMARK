@@ -13,11 +13,10 @@
 #include <GL/glu.h>
 #include <GL/glext.h>
 
-// #include <linux/memfd.h>
-// #include <linux/fcntl.h>
 #include "sys.h"
 
 #include <libspectre/spectre.h>
+#include "libspectre-private.h"
 #include "postscript.h"
 
 #include "shader.h"
@@ -27,7 +26,9 @@ const char* vshader = "#version 450\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xy
 #define CANVAS_HEIGHT 1080
 #define CHAR_BUFF_SIZE 64
 
-#define DEBUG
+// #define DEBUG_VERTEX
+#define DEBUG_FRAGMENT
+// #define DEBUG_PROGRAM
 #define KEY_HANDLING
 
 GLuint vao;
@@ -41,25 +42,23 @@ static gboolean check_escape(GtkWidget *widget, GdkEventKey *event)
 {
 	(void)widget;
 	if (event->keyval == GDK_KEY_Escape) {
-		SYS_exit(0);
+		SYS_exit_group(0);
 	}
 
 	return FALSE;
 }
 #endif
 
-void render_postscript(const unsigned char* postscript, unsigned int length, unsigned char** data, int* row_length) {
+static void render_postscript(const unsigned char* postscript, unsigned int length, unsigned char** data, int* row_length) {
 	int fd = SYS_memfd_create("", 0);
 	SYS_write(fd, postscript, length);
 
 	char memfd_path[CHAR_BUFF_SIZE];
-	if (snprintf(memfd_path, CHAR_BUFF_SIZE, "/proc/self/fd/%d", fd) >= CHAR_BUFF_SIZE) {
-		SYS_exit(0);
-	}
+	sprintf(memfd_path, "/proc/self/fd/%d", fd);
 
-	SpectreDocument* doc = spectre_document_new();
-	spectre_document_load(doc, memfd_path);
-	spectre_document_render(doc, data, row_length);
+	SpectreDocument doc;
+	spectre_document_load(&doc, memfd_path);
+	spectre_document_render(&doc, data, row_length);
 }
 
 static gboolean
@@ -92,18 +91,20 @@ static void on_realize(GtkGLArea *glarea)
 	glShaderSource(f, 1, &shader_frag_min, NULL);
 	glCompileShader(f);
 
-#ifdef DEBUG
-	GLint isCompiled = 0;
-	glGetShaderiv(f, GL_COMPILE_STATUS, &isCompiled);
-	if(isCompiled == GL_FALSE) {
-		GLint maxLength = 0;
-		glGetShaderiv(f, GL_INFO_LOG_LENGTH, &maxLength);
+#ifdef DEBUG_VERTEX
+	{
+		GLint isCompiled = 0;
+		glGetShaderiv(f, GL_COMPILE_STATUS, &isCompiled);
+		if(isCompiled == GL_FALSE) {
+			GLint maxLength = 0;
+			glGetShaderiv(f, GL_INFO_LOG_LENGTH, &maxLength);
 
-		char* error = malloc(maxLength);
-		glGetShaderInfoLog(f, maxLength, &maxLength, error);
-		printf("%s\n", error);
+			char* error = malloc(maxLength);
+			glGetShaderInfoLog(f, maxLength, &maxLength, error);
+			SYS_write(0, error, maxLength);
 
-		SYS_exit(0);
+			SYS_exit_group(-1);
+		}
 	}
 #endif
 
@@ -111,18 +112,20 @@ static void on_realize(GtkGLArea *glarea)
 	glShaderSource(v, 1, &vshader, NULL);
 	glCompileShader(v);
 
-#ifdef DEBUG
-	GLint isCompiled2 = 0;
-	glGetShaderiv(v, GL_COMPILE_STATUS, &isCompiled2);
-	if(isCompiled2 == GL_FALSE) {
-		GLint maxLength = 0;
-		glGetShaderiv(v, GL_INFO_LOG_LENGTH, &maxLength);
+#ifdef DEBUG_FRAGMENT
+	{
+		GLint isCompiled = 0;
+		glGetShaderiv(f, GL_COMPILE_STATUS, &isCompiled);
+		if(isCompiled == GL_FALSE) {
+			GLint maxLength = 0;
+			glGetShaderiv(f, GL_INFO_LOG_LENGTH, &maxLength);
 
-		char* error = malloc(maxLength);
-		glGetShaderInfoLog(v, maxLength, &maxLength, error);
-		printf("%s\n", error);
+			char* error = malloc(maxLength);
+			glGetShaderInfoLog(f, maxLength, &maxLength, error);
+			SYS_write(0, error, maxLength);
 
-		SYS_exit(0);
+			SYS_exit_group(-1);
+		}
 	}
 #endif
 
@@ -132,18 +135,20 @@ static void on_realize(GtkGLArea *glarea)
 	glAttachShader(p,f);
 	glLinkProgram(p);
 
-#ifdef DEBUG
-	GLint isLinked = 0;
-	glGetProgramiv(p, GL_LINK_STATUS, (int *)&isLinked);
-	if (isLinked == GL_FALSE) {
-		GLint maxLength = 0;
-		glGetProgramiv(p, GL_INFO_LOG_LENGTH, &maxLength);
+#ifdef DEBUG_PROGRAM
+	{
+		GLint isLinked = 0;
+		glGetProgramiv(p, GL_LINK_STATUS, (int *)&isLinked);
+		if (isLinked == GL_FALSE) {
+			GLint maxLength = 0;
+			glGetProgramiv(p, GL_INFO_LOG_LENGTH, &maxLength);
 
-		char* error = malloc(maxLength);
-		glGetProgramInfoLog(p, maxLength, &maxLength,error);
-		printf("%s\n", error);
+			char* error = malloc(maxLength);
+			glGetProgramInfoLog(p, maxLength, &maxLength,error);
+			SYS_write(0, error, maxLength);
 
-		SYS_exit(0);
+			SYS_exit_group(-1);
+		}
 	}
 #endif
 
@@ -203,5 +208,5 @@ void _start() {
 
 	gtk_main();
 
-	SYS_exit(0);
+	SYS_exit_group(0);
 }

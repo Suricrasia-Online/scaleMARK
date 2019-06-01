@@ -300,6 +300,7 @@ force_inline static void SYS_break(void) {
 
 #ifdef __x86_64__
 #define SYS_NR_exit 60
+#define SYS_NR_exit_group 231
 #define SYS_NR_mmap 9
 #define SYS_NR_stat 4
 #define SYS_NR_fstat 5
@@ -327,6 +328,7 @@ force_inline static void SYS_break(void) {
 #define SYS_NR_waitid 247
 #elif defined(__i386__)
 #define SYS_NR_exit 1
+#define SYS_NR_exit_group 252
 #define SYS_NR_mmap 90
 #define SYS_NR_stat 106
 #define SYS_NR_fstat 108
@@ -355,6 +357,7 @@ force_inline static void SYS_break(void) {
 #define SYS_NR_waitpid 7
 #else /* ARM */
 #define SYS_NR_exit 1
+#define SYS_NR_exit_group 231
 #define SYS_NR_mmap 192 /* NOTE: ARM EABI linux supports mmap2 only! */
 #define SYS_NR_stat 106
 #define SYS_NR_fstat 108
@@ -475,6 +478,10 @@ SYSCALL_FUNC void SYS_execveat(int dirfd, const char* path, char*const argv[],
 }
 SYSCALL_FUNC void SYS_exit(int c) {
     SYS_syscall1(SYS_NR_exit, c);
+    __builtin_unreachable();
+}
+SYSCALL_FUNC void SYS_exit_group(int c) {
+    SYS_syscall1(SYS_NR_exit_group, c);
     __builtin_unreachable();
 }
 SYSCALL_FUNC ssize_t SYS_brk(void* p) {
