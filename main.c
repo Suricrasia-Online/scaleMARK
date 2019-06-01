@@ -19,7 +19,7 @@
 #include "postscript.h"
 
 #include "shader.h"
-const char* vshader = "#version 450\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xyxx,y.yxxx,y.xxxx};void main(){gl_Position=x[gl_VertexID];}";
+const char* vshader = "#version 420\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xyxx,y.yxxx,y.xxxx};void main(){gl_Position=x[gl_VertexID];}";
 
 #define CANVAS_WIDTH 1920
 #define CANVAS_HEIGHT 1080
@@ -28,7 +28,7 @@ const char* vshader = "#version 450\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xy
 // #define DEBUG_VERTEX
 #define DEBUG_FRAGMENT
 // #define DEBUG_PROGRAM
-// #define KEY_HANDLING
+#define KEY_HANDLING
 
 GLuint vao;
 GLuint p;
@@ -41,7 +41,7 @@ static gboolean check_escape(GtkWidget *widget, GdkEventKey *event)
 {
 	(void)widget;
 	if (event->keyval == GDK_KEY_Escape) {
-		SYS_exit_group(0);
+		gtk_main_quit();
 	}
 
 	return FALSE;

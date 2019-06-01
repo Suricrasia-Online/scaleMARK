@@ -75,5 +75,7 @@ $(PROJNAME) : $(PROJNAME)_opt.elf.packed
 	cat ./vondehi/vondehi $< > $@
 	chmod +x $@
 
+.PRECIOUS: $(PROJNAME)_opt.elf
+
 clean :
 	-rm *.elf *.xz shader.h $(PROJNAME) $(PROJNAME)_unpacked
