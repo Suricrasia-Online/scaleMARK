@@ -172,7 +172,7 @@ int triangle(int x, int f, int a, int p) {
 // 	return triangle(x-f/3,f,a/8,p)+triangle(x-f/5,f,a/4,p)+triangle(x,f,a/4,p)+triangle(x+f/5,f,a/4,p)+triangle(x+f/3,f,a/8,p);
 // }
 
-#define PACKET_SIZE 146
+#define PACKET_SIZE 125
 static unsigned char PACKET[] = {
 	[0] = 0x7b, [1] = 0x03, [2 ... PACKET_SIZE] = 0x00
 };
@@ -180,103 +180,151 @@ static unsigned char PACKET[] = {
 #define DECODED_DATA_SIZE 2880
 static int16_t DECODED_DATA[DECODED_DATA_SIZE];
 
-static OpusDecoder* opus_decoder;
-
-static void decode_random_packet(uint32_t seed) {
+static void decode_random_packet(uint32_t seed, OpusDecoder* opus_decoder) {
 	uint32_t state = seed;
 	for (int i = 2; i < PACKET_SIZE; i++) {
+		state++;
 		state = state ^ (state << 13u);
 		state = state ^ (state >> 17u);
 		state = state ^ (state << 5u);
-		state *= 1685821657u;
+		// state *= 1685821657u;
 		PACKET[i] = state;
 	}
 	int length = opus_decode(opus_decoder, PACKET, PACKET_SIZE, DECODED_DATA, DECODED_DATA_SIZE, seed == 0);
 	(void)length;
 }
 
-#define MUSIC_ROLL_LENGTH 40
-#define MR____ 0x00
-#define MR___1 0x73^0x40
-#define MR___2 0x05
-#define MR___3 0x53^0x40
-#define MR___4 0x2b
-#define MR___5 0x20
+// SILENCE
+#define ___ 0x00
+
+// BEATS
+#define BT1 0xc4
+#define BT2 0x4f
+#define BT3 0x95
+
+// BEEPS
+#define BP1 0xfc
+#define BP2 0x50
+#define BP3 0xe8
+#define BP4 0x18
+#define BP5 0x30
+
+// GRUNTS
+#define GR1 0x87
+#define GR2 0xe6
+#define GR3 0xea
+#define GR4 0x10
+#define GR5 0x2a
+#define GR6 0x68
+#define GR7 0x70
+#define GR8 0x99
+#define GR9 0xa4
+
+// TICKS
+#define TI1 0xdf
+#define TI2 0x02
+#define TI3 0x29
+#define TI4 0x3d
+#define TI5 0x94
+#define TI6 0xa0
+#define TI7 0xb6
+#define TI8 0xd0
+#define TI9 0xd6
+#define TIA 0xdb
+#define TIB 0xe1
+
+// HITS
+#define HT1 0x5b
+#define HT2 0xad
+#define HT3 0xd2
+
+// OTHER
+#define ML1 0xb1
+#define ML2 0xc8
+
 static const unsigned char MUSIC_ROLL[] = {
-	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 
-	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 
-	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 
-	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR___2, MR____,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR___2, MR____,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR___2, MR____,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  BP2,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  BP2,BP2,  ___,___,  ___,___,  ___,___,
 
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  BP2,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  BP2,BP2,  ___,___,  ___,___,  ___,___,
 
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR___3, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  GR7,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  GR7,BP2,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
 
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR___3, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  GR7,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  GR7,BP2,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
 
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR___3, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
-	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+TI6,TIB,  ___,___,  ___,___,  ___,___,  GR7,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  GR7,BP2,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+
+TI6,TIB,  ___,___,  TI9,___,  ___,___,  GR7,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  TI9,___,  ___,___,  GR7,___,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  BP2,BT1,  ___,___,  BT1,___,  ___,___,
+
+TI6,TIB,  ___,___,  ___,___,  ___,___,  GR7,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  ___,___,  ___,___,  GR7,BP2,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+
+TI6,TIB,  ___,___,  TI9,___,  ___,___,  GR7,___,  ___,___,  ___,___,  ___,___,
+BP1,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
+TI6,___,  ___,___,  TI9,___,  ___,___,  GR7,___,  ___,___,  ___,___,  ___,___,
+BP1,BP4,  ___,___,  ___,___,  ___,___,  BP2,BT1,  ___,___,  BT1,___,  ___,___,
+
 };
 
 #define SONG_LENGTH 120
@@ -284,24 +332,23 @@ static const unsigned char MUSIC_ROLL[] = {
 #define MAX_SAMPLES SAMPLE_RATE*SONG_LENGTH
 int16_t song_samples[MAX_SAMPLES];
 static void generate_song() {
-	for(int i = 0; i < MAX_SAMPLES; i++) {
-		int phased_i = i + triangle(i, 200, 300, 2);
-		song_samples[i] = (int16_t)triangle(phased_i, 300, triangle(phased_i, DECODED_DATA_SIZE*32, 20000, 1), 2);
-	}
 
-	// init_decoder();
-	opus_decoder = opus_decoder_create(48000, 1, NULL);
+	OpusDecoder* opus_decoder_1 = opus_decoder_create(48000, 1, NULL);
+	OpusDecoder* opus_decoder_2 = opus_decoder_create(48000, 1, NULL);
 	for (int i = 0; i < sizeof(MUSIC_ROLL); i++) {
-		decode_random_packet(MUSIC_ROLL[i]);
-		int max = 3000;
-		for (int j = 0; j < DECODED_DATA_SIZE; j++) {
-			int abs_d = abs(DECODED_DATA[j]);
-			max = max<abs_d?abs_d:max;
-		}
+		decode_random_packet(MUSIC_ROLL[i], i%2==0 ? opus_decoder_1 : opus_decoder_2);
+		// for (int j = 0; j < DECODED_DATA_SIZE; j++) {
+		// 	int abs_d = abs(DECODED_DATA[j]);
+		// 	max = max<abs_d?abs_d:max;
+		// }
 		// int mult = (6*4000)/max;
-		for (int j = 0; j < DECODED_DATA_SIZE && i*DECODED_DATA_SIZE+j < MAX_SAMPLES; j++) {
-			song_samples[i*DECODED_DATA_SIZE+j] += ((int)DECODED_DATA[j]*6*3000)/max;
+		for (int j = 0; j < DECODED_DATA_SIZE && i/2*DECODED_DATA_SIZE+j < MAX_SAMPLES; j++) {
+			song_samples[i/2*DECODED_DATA_SIZE+j] += (int)DECODED_DATA[j]*4;
 		}
+	}
+	for(int i = DECODED_DATA_SIZE*128; i < MAX_SAMPLES; i++) {
+		int phased_i = i + triangle(i, 200, 300, 2);
+		song_samples[i] += (int16_t)triangle(phased_i, 600, triangle(phased_i, DECODED_DATA_SIZE*32, 22000, 1), 2);
 	}
 }
 
@@ -322,11 +369,11 @@ void _start() {
 
 	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 	mainwindow = SDL_CreateWindow(
-		"", 
+		"",
 		0,
 		0,
-		CANVAS_WIDTH/2,
-		CANVAS_HEIGHT/2,
+		CANVAS_WIDTH/8,
+		CANVAS_HEIGHT/8,
 		SDL_WINDOW_OPENGL
 	);
 

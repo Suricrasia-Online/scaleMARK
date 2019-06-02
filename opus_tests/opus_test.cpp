@@ -15,7 +15,7 @@ static unsigned char rand_char() {
 	return randomstate;
 }
 
-static const int channels = 1;
+static const int channels = 2;
 static const int frame_size_120ms = 2880;
 
 int check_opus_error(int error) {
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 	auto voicectl = std::vector<int>({
 		OPUS_SET_BITRATE(4000),
 		OPUS_SET_COMPLEXITY(10),
-		OPUS_SET_BANDWIDTH(OPUS_BANDWIDTH_WIDEBAND),
+		OPUS_SET_BANDWIDTH(OPUS_BANDWIDTH_FULLBAND),
 		OPUS_SET_SIGNAL(OPUS_SIGNAL_MUSIC),
 		OPUS_SET_APPLICATION(OPUS_APPLICATION_AUDIO)
 	});
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
 	});
 
 	//encode samples
-	auto VY00RGLYL_packet = encode_packet(VY00RGLYL, 150, 1, voicectl, &error);
+	auto VY00RGLYL_packet = encode_packet(VY00RGLYL, 120, 1, voicectl, &error);
 	if (check_opus_error(error)) return -1;
 
 	auto JOUVERT_packet = encode_packet(JOUVERT, 120, 1, voicectl, &error);
@@ -125,17 +125,18 @@ int main(int argc, char** argv) {
 	std::cerr << UHH_packet.size() << std::endl;
 
 	std::cerr << std::hex << (int)JOUVERT_packet[0] << " " << (int)JOUVERT_packet[1] << std::endl;
-	std::cerr << std::hex << (int)VY00RGLYL_packet[0] << " " << (int)VY00RGLYL_packet[1] << std::endl;
+	std::cerr << std::hex << (int)VY00RGLYL_packet[0] << " " << (int)VY00RGLYL_packet[1] << (int)VY00RGLYL_packet[2] << " " << (int)VY00RGLYL_packet[3] << std::endl;
 	std::cerr << std::hex << (int)SILENCE_packet[0]  << std::endl;
 
 	// VY00RGLYL_packet[120]--;
 	//generate 16 samples using the encoded data
-	for (int i = 0x50*4; i < 1000000; i++) {
-		if (i%4 == 0){
-			int myi = i/4;
+	for (int i = 0x00*8; i < 1000000; i++) {
+		if (i%8 == 0){
+			error = opus_decoder_init(decoder, 48000, channels);
+			int myi = i/8;
 			randomstate = myi;
 			std::cerr << myi << std::endl;
-			for (int j = 2; j < VY00RGLYL_packet.size(); j++) {
+			for (int j = 4; j < VY00RGLYL_packet.size(); j++) {
 				// JOUVERT_packet[j]=0xf7;
 				VY00RGLYL_packet[j]=rand_char();
 			}
@@ -143,7 +144,7 @@ int main(int argc, char** argv) {
 		std::vector<unsigned char> packet = VY00RGLYL_packet;
 		//corruption >;3c
 		std::vector<opus_int16> decoded_payload(frame_size_120ms*channels);
-		int length = opus_decode(decoder, packet.data(), packet.size(), decoded_payload.data(), frame_size_120ms, 0);
+		int length = opus_decode(decoder, packet.data(), packet.size(), decoded_payload.data(), frame_size_120ms, i%8!=0);
 		if (check_opus_error(length)) return -1;
 		decoded_payload.resize(length*2);
 
@@ -153,7 +154,7 @@ int main(int argc, char** argv) {
 			max = max<abs_d?abs_d:max;
 		}
 		for (int j = 0; j < decoded_payload.size(); j++) {
-			decoded_payload[j] = ((int)decoded_payload[j]*6*4000)/max;
+			decoded_payload[j] = ((int)decoded_payload[j]*4*4000)/max;
 		}
 
 
