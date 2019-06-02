@@ -151,7 +151,7 @@ static void on_realize()
 void _start() {
 	asm volatile("sub $8, %rsp\n");
 
-	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 	SDL_Window* mainwindow = SDL_CreateWindow(
 		"", 
 		0,
@@ -161,7 +161,7 @@ void _start() {
 		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN
 	);
 
-	SDL_GLContext glcontext = SDL_GL_CreateContext(mainwindow);
+	SDL_GL_CreateContext(mainwindow);
 
 	on_realize();
 
