@@ -1,5 +1,4 @@
 
-# not using `pkg-config --libs` here because it will include too many libs
 LIBS := -lSDL2 -lGL -lspectre -lopus
 CFLAGS := -fno-plt -Os -std=gnu11 -nostartfiles -Wall -Wextra
 CFLAGS += -fno-stack-protector -fno-stack-check -fno-unwind-tables -fno-asynchronous-unwind-tables -fomit-frame-pointer

@@ -4,6 +4,7 @@
 #include<stdbool.h>
 #include<stdlib.h>
 #include<stdint.h>
+#include<limits.h>
 
 #include <SDL2/SDL.h>
 
@@ -96,7 +97,7 @@ static void on_realize()
 			glGetShaderInfoLog(f, maxLength, &maxLength, error);
 			SYS_write(0, error, maxLength);
 
-			SYS_exit_group(-1);
+			quit();
 		}
 	}
 #endif
@@ -117,7 +118,7 @@ static void on_realize()
 			glGetShaderInfoLog(f, maxLength, &maxLength, error);
 			SYS_write(0, error, maxLength);
 
-			SYS_exit_group(-1);
+			quit();
 		}
 	}
 #endif
@@ -140,7 +141,7 @@ static void on_realize()
 			glGetProgramInfoLog(p, maxLength, &maxLength,error);
 			SYS_write(0, error, maxLength);
 
-			SYS_exit_group(-1);
+			quit();
 		}
 	}
 #endif
@@ -243,6 +244,7 @@ static void decode_random_packet(uint32_t seed, OpusDecoder* opus_decoder) {
 #define ML2 0xc8
 
 static const unsigned char MUSIC_ROLL[] = {
+___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 TI6,TIB,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
 TI6,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,  ___,___,
@@ -343,7 +345,7 @@ static void generate_song() {
 		// }
 		// int mult = (6*4000)/max;
 		for (int j = 0; j < DECODED_DATA_SIZE && i/2*DECODED_DATA_SIZE+j < MAX_SAMPLES; j++) {
-			song_samples[i/2*DECODED_DATA_SIZE+j] += (int)DECODED_DATA[j]*4;
+			song_samples[i/2*DECODED_DATA_SIZE+j] += DECODED_DATA[j]*4;
 		}
 	}
 	for(int i = DECODED_DATA_SIZE*128; i < MAX_SAMPLES; i++) {
@@ -372,9 +374,9 @@ void _start() {
 		"",
 		0,
 		0,
-		CANVAS_WIDTH/8,
-		CANVAS_HEIGHT/8,
-		SDL_WINDOW_OPENGL
+		CANVAS_WIDTH,
+		CANVAS_HEIGHT,
+		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN
 	);
 
 	SDL_GL_CreateContext(mainwindow);
