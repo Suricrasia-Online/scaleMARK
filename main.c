@@ -176,21 +176,13 @@ int triangle(int x, int f, int a, int p) {
 static unsigned char PACKET[] = {
 	[0] = 0x7b, [1] = 0x03, [2 ... PACKET_SIZE] = 0x00
 };
-static unsigned char SILENCE_PACKET[] = { 0x58 };
+// static unsigned char SILENCE_PACKET[] = { 0x58 };
 #define DECODED_DATA_SIZE 2880
 static int16_t DECODED_DATA[DECODED_DATA_SIZE];
 
 static OpusDecoder* opus_decoder;
 
 static void decode_random_packet(uint32_t seed) {
-	int length;
-	(void)length;
-	int packetsize = seed==0?1:PACKET_SIZE;
-	unsigned char* packetpointer = seed==0?SILENCE_PACKET:PACKET;
-	// if (seed == 0) {
-	// 	length = opus_decode(opus_decoder, SILENCE_PACKET, 1, DECODED_DATA, DECODED_DATA_SIZE, 0);
-	// 	return;
-	// }
 	uint32_t state = seed;
 	for (int i = 2; i < PACKET_SIZE; i++) {
 		state = state ^ (state << 13u);
@@ -199,7 +191,8 @@ static void decode_random_packet(uint32_t seed) {
 		state *= 1685821657u;
 		PACKET[i] = state;
 	}
-	length = opus_decode(opus_decoder, packetpointer, packetsize, DECODED_DATA, DECODED_DATA_SIZE, 0);
+	int length = opus_decode(opus_decoder, PACKET, PACKET_SIZE, DECODED_DATA, DECODED_DATA_SIZE, seed == 0);
+	(void)length;
 }
 
 #define MUSIC_ROLL_LENGTH 40
@@ -207,7 +200,8 @@ static void decode_random_packet(uint32_t seed) {
 #define MR___1 0x73^0x40
 #define MR___2 0x05
 #define MR___3 0x53^0x40
-#define MR___4 0x66
+#define MR___4 0x2b
+#define MR___5 0x20
 static const unsigned char MUSIC_ROLL[] = {
 	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
 	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
@@ -247,7 +241,12 @@ static const unsigned char MUSIC_ROLL[] = {
 	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
 	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
 	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
-	MR___1, MR____, MR____, MR____, MR___2, MR____, MR___2, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
 
 	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
 	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
@@ -269,25 +268,15 @@ static const unsigned char MUSIC_ROLL[] = {
 	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
 	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
 
-	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
-	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
 
-	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR___3, MR____,
-	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
-	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
-
-	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
-	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
-
-	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR___3, MR____,
-	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
-	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
-	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR___3, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
 };
 
 #define SONG_LENGTH 120
@@ -304,14 +293,14 @@ static void generate_song() {
 	opus_decoder = opus_decoder_create(48000, 1, NULL);
 	for (int i = 0; i < sizeof(MUSIC_ROLL); i++) {
 		decode_random_packet(MUSIC_ROLL[i]);
-		int max = 4000;
+		int max = 3000;
 		for (int j = 0; j < DECODED_DATA_SIZE; j++) {
 			int abs_d = abs(DECODED_DATA[j]);
 			max = max<abs_d?abs_d:max;
 		}
-		int mult = (6*4000)/max;
+		// int mult = (6*4000)/max;
 		for (int j = 0; j < DECODED_DATA_SIZE && i*DECODED_DATA_SIZE+j < MAX_SAMPLES; j++) {
-			song_samples[i*DECODED_DATA_SIZE+j] += DECODED_DATA[j]*mult;
+			song_samples[i*DECODED_DATA_SIZE+j] += ((int)DECODED_DATA[j]*6*3000)/max;
 		}
 	}
 }

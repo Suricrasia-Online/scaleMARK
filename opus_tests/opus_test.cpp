@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
 
 	// VY00RGLYL_packet[120]--;
 	//generate 16 samples using the encoded data
-	for (int i = 0x0; i < 1000000; i++) {
+	for (int i = 0x50*4; i < 1000000; i++) {
 		if (i%4 == 0){
 			int myi = i/4;
 			randomstate = myi;
@@ -146,6 +146,17 @@ int main(int argc, char** argv) {
 		int length = opus_decode(decoder, packet.data(), packet.size(), decoded_payload.data(), frame_size_120ms, 0);
 		if (check_opus_error(length)) return -1;
 		decoded_payload.resize(length*2);
+
+		int max = 4000;
+		for (int j = 0; j < decoded_payload.size(); j++) {
+			int abs_d = abs(decoded_payload[j]);
+			max = max<abs_d?abs_d:max;
+		}
+		for (int j = 0; j < decoded_payload.size(); j++) {
+			decoded_payload[j] = ((int)decoded_payload[j]*6*4000)/max;
+		}
+
+
 		write(1, reinterpret_cast<const char*>(decoded_payload.data()), decoded_payload.size() * sizeof(opus_int16));
 	}
 
