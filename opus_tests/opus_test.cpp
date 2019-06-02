@@ -6,8 +6,17 @@
 #include <iterator>
 #include <unistd.h>
 
-static const int channels = 2;
-static const int frame_size_120ms = 5760;
+static uint32_t randomstate = 0x36dc64af;
+static unsigned char rand_char() {
+	randomstate = randomstate ^ (randomstate << 13u);
+	randomstate = randomstate ^ (randomstate >> 17u);
+	randomstate = randomstate ^ (randomstate << 5u);
+	randomstate *= 1685821657u;
+	return randomstate;
+}
+
+static const int channels = 1;
+static const int frame_size_120ms = 2880;
 
 int check_opus_error(int error) {
 	if (error < OPUS_OK) {
@@ -66,8 +75,8 @@ int main(int argc, char** argv) {
 	int error;
 
 	//load samples from file
-	auto VY00RGLYL = read_samples("./VY00RGYL.raw");
-	auto JOUVERT = read_samples("./JOUVERT.raw");
+	auto VY00RGLYL = read_samples("../mus/samples/pattern_save_me_crash.raw");
+	auto JOUVERT = read_samples("../mus/samples/pattern_save_me_click.raw");
 	auto SILENCE = read_samples("./silence.raw");
 	auto RINGTONE = read_samples("./ringtone.raw");
 	auto UHH = read_samples("./uhh.raw");
@@ -75,14 +84,14 @@ int main(int argc, char** argv) {
 	auto voicectl = std::vector<int>({
 		OPUS_SET_BITRATE(4000),
 		OPUS_SET_COMPLEXITY(10),
-		OPUS_SET_BANDWIDTH(OPUS_BANDWIDTH_MEDIUMBAND),
-		OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE),
-		OPUS_SET_APPLICATION(OPUS_APPLICATION_VOIP)
+		OPUS_SET_BANDWIDTH(OPUS_BANDWIDTH_WIDEBAND),
+		OPUS_SET_SIGNAL(OPUS_SIGNAL_MUSIC),
+		OPUS_SET_APPLICATION(OPUS_APPLICATION_AUDIO)
 	});
 
 	auto musicctl = std::vector<int>({
 		OPUS_SET_BITRATE(4000),
-		OPUS_SET_COMPLEXITY(5),
+		OPUS_SET_COMPLEXITY(10),
 		OPUS_SET_VBR(0),
 		OPUS_SET_BANDWIDTH(OPUS_BANDWIDTH_FULLBAND),
 		OPUS_SET_SIGNAL(OPUS_SIGNAL_MUSIC),
@@ -93,21 +102,21 @@ int main(int argc, char** argv) {
 	auto VY00RGLYL_packet = encode_packet(VY00RGLYL, 150, 1, voicectl, &error);
 	if (check_opus_error(error)) return -1;
 
-	auto JOUVERT_packet = encode_packet(JOUVERT, 120, 4, voicectl, &error);
+	auto JOUVERT_packet = encode_packet(JOUVERT, 120, 1, voicectl, &error);
 	if (check_opus_error(error)) return -1;
 
-	auto SILENCE_packet = encode_packet(SILENCE, 20, 2, voicectl, &error);
+	auto SILENCE_packet = encode_packet(SILENCE, 1, 100, voicectl, &error);
 	if (check_opus_error(error)) return -1;
 
-	auto RINGTONE_packet = encode_packet(RINGTONE, 120, 6, musicctl, &error);
+	auto RINGTONE_packet = encode_packet(RINGTONE, 100, 6, musicctl, &error);
 	if (check_opus_error(error)) return -1;
 
-	auto UHH_packet = encode_packet(UHH, 160, 2, voicectl, &error);
+	auto UHH_packet = encode_packet(UHH, 100, 2, voicectl, &error);
 	if (check_opus_error(error)) return -1;
 
 
 	//decode the packet back to audio
-	auto decoder = opus_decoder_create(48000, 2, &error);
+	auto decoder = opus_decoder_create(48000, channels, &error);
 	// opus_decoder_ctl(decoder, OPUS_SET_GAIN(-2000));
 	std::cerr << VY00RGLYL_packet.size() << std::endl;
 	std::cerr << JOUVERT_packet.size() << std::endl;
@@ -115,31 +124,24 @@ int main(int argc, char** argv) {
 	std::cerr << RINGTONE_packet.size() << std::endl;
 	std::cerr << UHH_packet.size() << std::endl;
 
+	std::cerr << std::hex << (int)JOUVERT_packet[0] << " " << (int)JOUVERT_packet[1] << std::endl;
+	std::cerr << std::hex << (int)VY00RGLYL_packet[0] << " " << (int)VY00RGLYL_packet[1] << std::endl;
+	std::cerr << std::hex << (int)SILENCE_packet[0]  << std::endl;
+
 	// VY00RGLYL_packet[120]--;
 	//generate 16 samples using the encoded data
-	for (int i = 0; i < 320-8+8+32+16+16+64; i++) {
-		std::vector<unsigned char> packet = SILENCE_packet;
-		if (i%4 == 0 && i != 48 && i != 160-16 && (i < 176 || i >= 192)) packet = VY00RGLYL_packet;
-		if (i%4 == 2 && i > 32 && i < 320-8+8+16+16+16+16) packet = JOUVERT_packet;
-		if (i > 40) {
-			if (i%4 == 3 && (i/4)%4 == 0 && (i/16)%4 < 2 && i < 320-8+8) packet = JOUVERT_packet;
-			if (i%4 == 1 && (i/4)%4 == 0 && (i/16)%4 >= 2 && i < 320-8+8) packet = JOUVERT_packet;
+	for (int i = 0x0; i < 1000000; i++) {
+		if (i%4 == 0){
+			int myi = i/4;
+			randomstate = myi;
+			std::cerr << myi << std::endl;
+			for (int j = 2; j < VY00RGLYL_packet.size(); j++) {
+				// JOUVERT_packet[j]=0xf7;
+				VY00RGLYL_packet[j]=rand_char();
+			}
 		}
-		if (i%4 == 3 && (i/4)%4 < 2 && i > 94 && (i/16)%4 >= 2 && i <= 256) packet = RINGTONE_packet;
-		if (i%4 == 1 && (i/4)%4 < 2 && i > 94 && (i/16)%4 < 2 && i <= 256) packet = RINGTONE_packet;
-		if (i == 89) packet = JOUVERT_packet;
-		if (i >= 90-2 && i < 96) packet = SILENCE_packet;
-		if (i == 90 || i == 91 || i == 92) packet = RINGTONE_packet;
-		if (i == 95) packet = UHH_packet;
-		if (i == 97) packet = JOUVERT_packet;
-		if (i == 192-1) packet = UHH_packet;
-		if (i%4 < 3 && i > 192 && (i/4)%4 == 0 && i < 320-8+8) packet = VY00RGLYL_packet;
-		if (i%8 > 2 && i%8<7 && i > 256 && (i/4)%4 < 2 && i < 320-8+8) packet = RINGTONE_packet;
-		if (i > 320-8 && i < 320-8+8) packet = VY00RGLYL_packet;
-		if (i >= 320-8+8+32+16+16) packet = SILENCE_packet;
-		if (i > 320-8+8 && (i/4)%2 == 1) packet = SILENCE_packet;
+		std::vector<unsigned char> packet = VY00RGLYL_packet;
 		//corruption >;3c
-		if (packet.size() > 100 && i > 192) packet[((i-16*2)%20)+50]--;
 		std::vector<opus_int16> decoded_payload(frame_size_120ms*channels);
 		int length = opus_decode(decoder, packet.data(), packet.size(), decoded_payload.data(), frame_size_120ms, 0);
 		if (check_opus_error(length)) return -1;

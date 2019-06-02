@@ -17,6 +17,8 @@
 #include <libspectre/spectre.h>
 #include "postscript.h"
 
+#include <opus/opus.h>
+
 #include "shader.h"
 const char* vshader = "#version 420\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xyxx,y.yxxx,y.xxxx};void main(){gl_Position=x[gl_VertexID];}";
 
@@ -31,7 +33,6 @@ const char* vshader = "#version 420\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xy
 static GLuint vao;
 static GLuint p;
 static GLuint renderedTex;
-
 
 static SDL_Window* mainwindow;
 
@@ -167,19 +168,151 @@ int triangle(int x, int f, int a, int p) {
 	return (a*(f/p-abs((x%(f*2))-f)))/f;
 }
 
-int soft_triangle(int x, int f, int a, int p) {
-	return triangle(x-f/3,f,a/8,p)+triangle(x-f/5,f,a/4,p)+triangle(x,f,a/4,p)+triangle(x+f/5,f,a/4,p)+triangle(x+f/3,f,a/8,p);
+// int soft_triangle(int x, int f, int a, int p) {
+// 	return triangle(x-f/3,f,a/8,p)+triangle(x-f/5,f,a/4,p)+triangle(x,f,a/4,p)+triangle(x+f/5,f,a/4,p)+triangle(x+f/3,f,a/8,p);
+// }
+
+#define PACKET_SIZE 146
+static unsigned char PACKET[] = {
+	[0] = 0x7b, [1] = 0x03, [2 ... PACKET_SIZE] = 0x00
+};
+static unsigned char SILENCE_PACKET[] = { 0x58 };
+#define DECODED_DATA_SIZE 2880
+static int16_t DECODED_DATA[DECODED_DATA_SIZE];
+
+static OpusDecoder* opus_decoder;
+
+static void decode_random_packet(uint32_t seed) {
+	int length;
+	(void)length;
+	int packetsize = seed==0?1:PACKET_SIZE;
+	unsigned char* packetpointer = seed==0?SILENCE_PACKET:PACKET;
+	// if (seed == 0) {
+	// 	length = opus_decode(opus_decoder, SILENCE_PACKET, 1, DECODED_DATA, DECODED_DATA_SIZE, 0);
+	// 	return;
+	// }
+	uint32_t state = seed;
+	for (int i = 2; i < PACKET_SIZE; i++) {
+		state = state ^ (state << 13u);
+		state = state ^ (state >> 17u);
+		state = state ^ (state << 5u);
+		state *= 1685821657u;
+		PACKET[i] = state;
+	}
+	length = opus_decode(opus_decoder, packetpointer, packetsize, DECODED_DATA, DECODED_DATA_SIZE, 0);
 }
 
-#define SONG_LENGTH 8
+#define MUSIC_ROLL_LENGTH 40
+#define MR____ 0x00
+#define MR___1 0x73^0x40
+#define MR___2 0x05
+#define MR___3 0x53^0x40
+#define MR___4 0x66
+static const unsigned char MUSIC_ROLL[] = {
+	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+
+	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR____, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+
+	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+
+	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR____, MR____, MR____, MR____,
+
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR___2, MR____,
+
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR___2, MR____,
+
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR___2, MR____,
+
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___2, MR____, MR___2, MR____,
+
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR___3, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR___3, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
+	MR___1, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___1, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+
+	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
+	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+
+	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR___3, MR____,
+	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
+	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+
+	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
+	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+
+	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR___3, MR____,
+	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR____,
+	MR___4, MR____, MR___2, MR____, MR___3, MR____, MR____, MR____,
+	MR___4, MR____, MR____, MR____, MR___3, MR____, MR___2, MR___2,
+};
+
+#define SONG_LENGTH 120
 #define SAMPLE_RATE 44100
 #define MAX_SAMPLES SAMPLE_RATE*SONG_LENGTH
 int16_t song_samples[MAX_SAMPLES];
 static void generate_song() {
 	for(int i = 0; i < MAX_SAMPLES; i++) {
-		int phased_i = i + soft_triangle(i, 200, 300, 2);
-		song_samples[i] = (int16_t)soft_triangle(phased_i, 300, soft_triangle(phased_i, SAMPLE_RATE*2, 30000, 1), 2) ^ ((i^(i>>8))&0x1f);
-		// if(i>1) song_samples[i] = song_samples[i-2]/4 + song_samples[i-1]/4 + song_samples[i]/2;
+		int phased_i = i + triangle(i, 200, 300, 2);
+		song_samples[i] = (int16_t)triangle(phased_i, 300, triangle(phased_i, DECODED_DATA_SIZE*32, 20000, 1), 2);
+	}
+
+	// init_decoder();
+	opus_decoder = opus_decoder_create(48000, 1, NULL);
+	for (int i = 0; i < sizeof(MUSIC_ROLL); i++) {
+		decode_random_packet(MUSIC_ROLL[i]);
+		int max = 4000;
+		for (int j = 0; j < DECODED_DATA_SIZE; j++) {
+			int abs_d = abs(DECODED_DATA[j]);
+			max = max<abs_d?abs_d:max;
+		}
+		int mult = (6*4000)/max;
+		for (int j = 0; j < DECODED_DATA_SIZE && i*DECODED_DATA_SIZE+j < MAX_SAMPLES; j++) {
+			song_samples[i*DECODED_DATA_SIZE+j] += DECODED_DATA[j]*mult;
+		}
 	}
 }
 
@@ -203,9 +336,9 @@ void _start() {
 		"", 
 		0,
 		0,
-		CANVAS_WIDTH,
-		CANVAS_HEIGHT,
-		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN
+		CANVAS_WIDTH/2,
+		CANVAS_HEIGHT/2,
+		SDL_WINDOW_OPENGL
 	);
 
 	SDL_GL_CreateContext(mainwindow);
