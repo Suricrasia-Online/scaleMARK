@@ -5,9 +5,8 @@
 #include<stdlib.h>
 #include<stdint.h>
 
-#include <glib.h>
-#include <gtk/gtk.h>
-#include <gdk/gdkkeysyms.h>
+#include <SDL2/SDL.h>
+
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
@@ -28,25 +27,12 @@ const char* vshader = "#version 420\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xy
 // #define DEBUG_VERTEX
 #define DEBUG_FRAGMENT
 // #define DEBUG_PROGRAM
-// #define KEY_HANDLING
 
-GLuint vao;
-GLuint p;
-GLuint renderedTex;
+static GLuint vao;
+static GLuint p;
+static GLuint renderedTex;
 
-GTimer* gtimer = NULL;
-
-#ifdef KEY_HANDLING
-static gboolean check_escape(GtkWidget *widget, GdkEventKey *event)
-{
-	(void)widget;
-	if (event->keyval == GDK_KEY_Escape) {
-		gtk_main_quit();
-	}
-
-	return FALSE;
-}
-#endif
+static Uint32 startTime=0;
 
 static void render_postscript(const unsigned char* postscript, unsigned int length, unsigned char** data, int* row_length) {
 	int fd = SYS_memfd_create("", 0);
@@ -60,13 +46,10 @@ static void render_postscript(const unsigned char* postscript, unsigned int leng
 	spectre_document_render(doc, data, row_length);
 }
 
-static gboolean
-on_render (GtkGLArea *glarea, GdkGLContext *context)
+static void on_render()
 {
-	(void)context;
-	(void)glarea;
-	if (gtimer == NULL) gtimer = g_timer_new();
-	float itime = g_timer_elapsed(gtimer, NULL);
+	if (startTime == 0) startTime = SDL_GetTicks();
+	float itime = (SDL_GetTicks()-startTime)/1000.0;
 
 	glUseProgram(p);
 	glBindVertexArray(vao);
@@ -76,17 +59,13 @@ on_render (GtkGLArea *glarea, GdkGLContext *context)
 	glBindTexture(GL_TEXTURE_2D, renderedTex);
 	glUniform1f(0, itime);
 
-	// if (itime > 16) gtk_main_quit();
+	// if (itime > 16) SYS_exit_group(0);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-	return TRUE;
 }
 
-static void on_realize(GtkGLArea *glarea)
+static void on_realize()
 {
-	gtk_gl_area_make_current(glarea);
-
 	// compile shader
 	GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -167,47 +146,34 @@ static void on_realize(GtkGLArea *glarea)
 	render_postscript(postscript_ps_min, postscript_ps_min_len, &rendered_data, &row_length);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, row_length/4, row_length/4, 0, GL_BGRA, GL_UNSIGNED_BYTE, rendered_data);
-
-	GdkGLContext *context = gtk_gl_area_get_context(glarea);
-	GdkWindow *glwindow = gdk_gl_context_get_window(context);
-	GdkFrameClock *frame_clock = gdk_window_get_frame_clock(glwindow);
-
-	// Connect update signal:
-	g_signal_connect_swapped(frame_clock, "update", G_CALLBACK(gtk_gl_area_queue_render), glarea);
-
-	// Start updating:
-	gdk_frame_clock_begin_updating(frame_clock);
 }
 
 void _start() {
 	asm volatile("sub $8, %rsp\n");
 
-	typedef void (*voidWithOneParam)(int*);
-	voidWithOneParam gtk_init_one_param = (voidWithOneParam)gtk_init;
-	(*gtk_init_one_param)(NULL);
+	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
+	SDL_Window* mainwindow = SDL_CreateWindow(
+		"", 
+		0,
+		0,
+		CANVAS_WIDTH,
+		CANVAS_HEIGHT,
+		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN
+	);
 
-	GtkWidget *win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	GtkWidget *glarea = gtk_gl_area_new();
-	gtk_container_add(GTK_CONTAINER(win), glarea);
+	SDL_GLContext glcontext = SDL_GL_CreateContext(mainwindow);
 
-	g_signal_connect(win, "destroy", gtk_main_quit, NULL);
-#ifdef KEY_HANDLING
-	g_signal_connect(win, "key_press_event", G_CALLBACK(check_escape), NULL);
-#endif
-	g_signal_connect(glarea, "realize", G_CALLBACK(on_realize), NULL);
-	g_signal_connect(glarea, "render", G_CALLBACK(on_render), NULL);
+	on_realize();
 
-	gtk_widget_show_all (win);
-
-	gtk_window_fullscreen((GtkWindow*)win);
-	GdkWindow* window = gtk_widget_get_window(win);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-	GdkCursor* Cursor = gdk_cursor_new(GDK_BLANK_CURSOR);
-#pragma GCC diagnostic pop
-	gdk_window_set_cursor(window, Cursor);
-
-	gtk_main();
-
-	SYS_exit_group(0);
+	while (true) {
+		SDL_Event Event;
+		while (SDL_PollEvent(&Event)) {
+			if (Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE)) {
+				SYS_exit_group(0);
+			}
+		}
+		on_render();
+		SDL_GL_SwapWindow(mainwindow);
+	}
+	__builtin_unreachable();
 }

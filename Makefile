@@ -1,6 +1,6 @@
 
 # not using `pkg-config --libs` here because it will include too many libs
-CFLAGS := `pkg-config --cflags gtk+-3.0` -lglib-2.0 -lGL -lgtk-3 -lgdk-3 -lgobject-2.0 -lspectre -no-pie -fno-plt -O1 -std=gnu11 -nostartfiles -Wall -Wextra -flto -fuse-linker-plugin -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -fno-stack-check -fno-stack-protector -fomit-frame-pointer
+CFLAGS := `pkg-config --cflags gtk+-3.0` -lSDL2 -lGL -lspectre -no-pie -fno-plt -O1 -std=gnu11 -nostartfiles -Wall -Wextra -flto -fuse-linker-plugin -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -fno-stack-check -fno-stack-protector -fomit-frame-pointer
 PROJNAME := main
 
 .PHONY: clean
