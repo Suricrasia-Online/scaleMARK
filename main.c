@@ -48,7 +48,10 @@ static void render_postscript(const unsigned char* postscript, unsigned int leng
 
 static void on_render()
 {
-	if (startTime == 0) startTime = SDL_GetTicks();
+	if (startTime == 0) {
+		startTime = SDL_GetTicks();
+		SDL_PauseAudio(0);
+	}
 	float itime = (SDL_GetTicks()-startTime)/1000.0;
 
 	glUseProgram(p);
@@ -148,8 +151,41 @@ static void on_realize()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, row_length/4, row_length/4, 0, GL_BGRA, GL_UNSIGNED_BYTE, rendered_data);
 }
 
+#define MAX_SAMPLES 352800
+Uint16 song_samples[MAX_SAMPLES];
+static void generate_song() {
+	for(int i = 0; i < MAX_SAMPLES; i++) {
+		song_samples[i] = 100*(i%300);
+		int flanger = (i/1000)%20;
+		song_samples[i] = (song_samples[i]+song_samples[i-flanger])/2;
+	}
+}
+
+int audiotime = 0;
+static void audio_callback(void* userdata, Uint8* stream, int len) {
+	(void)userdata;
+	for(int i = 0; i < len; i++) {
+		audiotime++;
+		if(audiotime > MAX_SAMPLES*2) SYS_exit_group(0);
+		stream[i] = ((Uint8*)song_samples)[audiotime^1];
+	}
+}
+
+static SDL_AudioSpec desired = {
+	.freq = 44100,
+	.format = AUDIO_S16LSB,
+	.channels = 1,
+	.silence = 0,
+	.samples = 4096,
+	.size = 0,
+	.callback = audio_callback,
+	.userdata = 0
+};
+
 void _start() {
 	asm volatile("sub $8, %rsp\n");
+
+	generate_song();
 
 	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 	SDL_Window* mainwindow = SDL_CreateWindow(
@@ -162,6 +198,8 @@ void _start() {
 	);
 
 	SDL_GL_CreateContext(mainwindow);
+
+	SDL_OpenAudio(&desired, NULL);
 
 	on_realize();
 
