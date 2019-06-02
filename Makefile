@@ -1,6 +1,9 @@
 
 # not using `pkg-config --libs` here because it will include too many libs
-CFLAGS := `pkg-config --cflags gtk+-3.0` -lSDL2 -lGL -lspectre -lopus -no-pie -fno-plt -O1 -std=gnu11 -nostartfiles -Wall -Wextra -flto -fuse-linker-plugin -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -fno-stack-check -fno-stack-protector -fomit-frame-pointer
+LIBS := -lSDL2 -lGL -lspectre -lopus
+CFLAGS := -fno-plt -Os -std=gnu11 -nostartfiles -Wall -Wextra
+CFLAGS += -fno-stack-protector -fno-stack-check -fno-unwind-tables -fno-asynchronous-unwind-tables -fomit-frame-pointer
+CFLAGS += -no-pie -fno-pic -fno-PIE -fno-PIC -march=core2 -ffunction-sections -fdata-sections
 PROJNAME := main
 
 .PHONY: clean
@@ -42,7 +45,7 @@ postscript.h : postscript.ps.min
 	sed -i 's/unsigned char/const unsigned char/' $@
 
 $(PROJNAME).elf : $(PROJNAME).c shader.h postscript.h Makefile sys.h def.h
-	gcc -o $@ $< $(CFLAGS)
+	gcc -o $@ $< $(CFLAGS) $(LIBS)
 
 $(PROJNAME)_unpacked : $(PROJNAME).elf
 	mv $< $@
@@ -55,7 +58,7 @@ $(PROJNAME) : $(PROJNAME)_opt.elf.packed
 %_opt.elf : %.elf Makefile noelfver
 	cp $< $@
 	strip $@
-	strip -R .note -R .comment -R .eh_frame -R .eh_frame_hdr -R .note.gnu.build-id -R .got -R .got.plt -R .gnu.version -R .rela.dyn -R .shstrtab $@
+	strip -R .note -R .comment -R .eh_frame -R .eh_frame_hdr -R .note.gnu.build-id -R .got -R .got.plt -R .gnu.version -R .shstrtab -R .gnu.version_r -R .gnu.hash $@
 	./noelfver/noelfver $@ > $@.nover
 	mv $@.nover $@
 	#remove section header
@@ -65,6 +68,7 @@ $(PROJNAME) : $(PROJNAME)_opt.elf.packed
 	sed -i 's/_edata/\x00\x00\x00\x00\x00\x00/g' $@;
 	sed -i 's/__bss_start/\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00/g' $@;
 	sed -i 's/_end/\x00\x00\x00\x00/g' $@;
+	sed -i 's/GLIBC_2\.2\.5/\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00/g' $@;
 
 	chmod +x $@
 

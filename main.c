@@ -92,7 +92,7 @@ static void on_realize()
 			GLint maxLength = 0;
 			glGetShaderiv(f, GL_INFO_LOG_LENGTH, &maxLength);
 
-			char* error = malloc(maxLength);
+			char error[maxLength];
 			glGetShaderInfoLog(f, maxLength, &maxLength, error);
 			SYS_write(0, error, maxLength);
 
@@ -113,7 +113,7 @@ static void on_realize()
 			GLint maxLength = 0;
 			glGetShaderiv(f, GL_INFO_LOG_LENGTH, &maxLength);
 
-			char* error = malloc(maxLength);
+			char error[maxLength];
 			glGetShaderInfoLog(f, maxLength, &maxLength, error);
 			SYS_write(0, error, maxLength);
 
@@ -136,7 +136,7 @@ static void on_realize()
 			GLint maxLength = 0;
 			glGetProgramiv(p, GL_INFO_LOG_LENGTH, &maxLength);
 
-			char* error = malloc(maxLength);
+			char error[maxLength];
 			glGetProgramInfoLog(p, maxLength, &maxLength,error);
 			SYS_write(0, error, maxLength);
 
