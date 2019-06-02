@@ -32,7 +32,14 @@ static GLuint vao;
 static GLuint p;
 static GLuint renderedTex;
 
-static Uint32 startTime=0;
+
+static SDL_Window* mainwindow;
+
+static void quit() {
+	SDL_DestroyWindow(mainwindow);
+	SYS_exit_group(0);
+	__builtin_unreachable();
+}
 
 static void render_postscript(const unsigned char* postscript, unsigned int length, unsigned char** data, int* row_length) {
 	int fd = SYS_memfd_create("", 0);
@@ -48,6 +55,7 @@ static void render_postscript(const unsigned char* postscript, unsigned int leng
 
 static void on_render()
 {
+	static Uint32 startTime=0;
 	if (startTime == 0) {
 		startTime = SDL_GetTicks();
 		SDL_PauseAudio(0);
@@ -62,7 +70,7 @@ static void on_render()
 	glBindTexture(GL_TEXTURE_2D, renderedTex);
 	glUniform1f(0, itime);
 
-	// if (itime > 16) SYS_exit_group(0);
+	// if (itime > 16) quit();
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
@@ -151,36 +159,39 @@ static void on_realize()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, row_length/4, row_length/4, 0, GL_BGRA, GL_UNSIGNED_BYTE, rendered_data);
 }
 
-#define MAX_SAMPLES 352800
-Uint16 song_samples[MAX_SAMPLES];
+inline int abs(int x) {
+	return x<0?-x:x;
+}
+
+int triangle(int x, int f, int a, int p) {
+	return (a*(f/p-abs((x%(f*2))-f)))/f;
+}
+
+int soft_triangle(int x, int f, int a, int p) {
+	return triangle(x-f/3,f,a/8,p)+triangle(x-f/5,f,a/4,p)+triangle(x,f,a/4,p)+triangle(x+f/5,f,a/4,p)+triangle(x+f/3,f,a/8,p);
+}
+
+#define SONG_LENGTH 8
+#define SAMPLE_RATE 44100
+#define MAX_SAMPLES SAMPLE_RATE*SONG_LENGTH
+int16_t song_samples[MAX_SAMPLES];
 static void generate_song() {
 	for(int i = 0; i < MAX_SAMPLES; i++) {
-		song_samples[i] = 100*(i%300);
-		int flanger = (i/1000)%20;
-		song_samples[i] = (song_samples[i]+song_samples[i-flanger])/2;
+		int phased_i = i + soft_triangle(i, 200, 300, 2);
+		song_samples[i] = (int16_t)soft_triangle(phased_i, 300, soft_triangle(phased_i, SAMPLE_RATE*2, 30000, 1), 2) ^ ((i^(i>>8))&0x1f);
+		// if(i>1) song_samples[i] = song_samples[i-2]/4 + song_samples[i-1]/4 + song_samples[i]/2;
 	}
 }
 
-int audiotime = 0;
 static void audio_callback(void* userdata, Uint8* stream, int len) {
 	(void)userdata;
+	static int audiotime = 0;
 	for(int i = 0; i < len; i++) {
 		audiotime++;
-		if(audiotime > MAX_SAMPLES*2) SYS_exit_group(0);
+		if(audiotime > MAX_SAMPLES*2) quit();
 		stream[i] = ((Uint8*)song_samples)[audiotime^1];
 	}
 }
-
-static SDL_AudioSpec desired = {
-	.freq = 44100,
-	.format = AUDIO_S16LSB,
-	.channels = 1,
-	.silence = 0,
-	.samples = 4096,
-	.size = 0,
-	.callback = audio_callback,
-	.userdata = 0
-};
 
 void _start() {
 	asm volatile("sub $8, %rsp\n");
@@ -188,7 +199,7 @@ void _start() {
 	generate_song();
 
 	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-	SDL_Window* mainwindow = SDL_CreateWindow(
+	mainwindow = SDL_CreateWindow(
 		"", 
 		0,
 		0,
@@ -199,15 +210,26 @@ void _start() {
 
 	SDL_GL_CreateContext(mainwindow);
 
+	static SDL_AudioSpec desired = {
+		.freq = SAMPLE_RATE,
+		.format = AUDIO_S16LSB,
+		.channels = 1,
+		.silence = 0,
+		.samples = 4096,
+		.size = 0,
+		.callback = audio_callback,
+		.userdata = 0
+	};
 	SDL_OpenAudio(&desired, NULL);
+	SDL_ShowCursor(false);
 
 	on_realize();
 
 	while (true) {
 		SDL_Event Event;
 		while (SDL_PollEvent(&Event)) {
-			if (Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE)) {
-				SYS_exit_group(0);
+			if (Event.type == SDL_QUIT/* || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE)*/) {
+				quit();
 			}
 		}
 		on_render();
