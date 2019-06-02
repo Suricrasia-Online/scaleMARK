@@ -6,7 +6,7 @@ out vec4 fragCol;
 // #define MAXDEPTH 3
 // #define SAMPLES 1
 
-bool polarized;// = false;
+float polarized;// = false;
 
 vec3 ML(float F) {
     return mat3(1.5,-.2,-.1,-.6,1.1,.2,-.1,.1,1.5)*(.5-.5*cos(2.*F*vec3(5.2,5.7,7.2)));
@@ -101,7 +101,7 @@ bool castRay(inout Ray ray) {
 }
 
 vec3 backlight(vec3 dir, float lag) {
-    return mix(ML(0.3+(polarized?lag:0.0))*3.0, vec3(0.0), 1.-pow(1.-pow(clamp((dir.z+0.3)/0.05, 0.0, 1.0),4.0),4.0));
+    return ML(0.3+polarized*lag)*3.0*smoothstep(0.0,1.0,clamp(-0.8-dir.z*4.0,0.0,1.0));
 }
 
 void phongShadeRay(inout Ray ray) {
@@ -140,7 +140,7 @@ void recursivelyRender(inout Ray ray) {
             phongShadeRay(ray);
             transmitRay(ray);
         } else {
-            if(i>0||!polarized)ray.m_color += backlight(ray.m_direction, ray.m_lag)*ray.m_attenuation;
+            ray.m_color += (i==0?pow(1.0-polarized,2.0):1.0)*backlight(ray.m_direction, ray.m_lag)*ray.m_attenuation;
 			return;
         }
     }
@@ -151,7 +151,7 @@ vec2 Nth_weyl(int n) {
 }
 
 void main() {
-	polarized = iTime>8.;
+	polarized = smoothstep(0.0, 1.0,sqrt(clamp((iTime-4.0)*1.5, 0.0, 1.0)));
 	// Normalized pixel coordinates (from -1 to 1)
 	vec2 uv_base = (gl_FragCoord.xy - vec2(960.0, 540.0))/vec2(960.0, 960.0);
 	float pixelsize = 1.0/1920.0*2.5;
@@ -179,6 +179,6 @@ void main() {
 
     col *= pow(max(1.0 - pow(length(uv_base)*0.7, 4.0), 0.0),3.0); 
     
-    fragCol = vec4(sqrt(log(max(col+vec3(0.01,0.01,0.02),0.0)*.7+1.0))*0.9, 1.0);
+    fragCol = vec4(pow(log(max(col+vec3(0.01,0.01,0.02),0.0)*.7+1.0),vec3(0.6))*0.9, 1.0);
 		//fragCol = alphablend(alphablend(vec4(0.5, sin(uv*10.0 + sin(iTime)*2.0), 1.0), OSD(uv/2.0+vec2(0.5,0.0), iTime/3.0)),texture(tex, mix(vec2(-0.0,-0.1), vec2(0.2,0.1), (uv*0.5+0.3))).xxyz);
 }

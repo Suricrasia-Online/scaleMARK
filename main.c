@@ -28,13 +28,13 @@ const char* vshader = "#version 420\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xy
 // #define DEBUG_VERTEX
 #define DEBUG_FRAGMENT
 // #define DEBUG_PROGRAM
-#define KEY_HANDLING
+// #define KEY_HANDLING
 
 GLuint vao;
 GLuint p;
 GLuint renderedTex;
 
-GTimer* gtimer;
+GTimer* gtimer = NULL;
 
 #ifdef KEY_HANDLING
 static gboolean check_escape(GtkWidget *widget, GdkEventKey *event)
@@ -65,6 +65,7 @@ on_render (GtkGLArea *glarea, GdkGLContext *context)
 {
 	(void)context;
 	(void)glarea;
+	if (gtimer == NULL) gtimer = g_timer_new();
 	float itime = g_timer_elapsed(gtimer, NULL);
 
 	glUseProgram(p);
@@ -180,7 +181,6 @@ static void on_realize(GtkGLArea *glarea)
 
 void _start() {
 	asm volatile("sub $8, %rsp\n");
-	gtimer = g_timer_new();
 
 	typedef void (*voidWithOneParam)(int*);
 	voidWithOneParam gtk_init_one_param = (voidWithOneParam)gtk_init;
