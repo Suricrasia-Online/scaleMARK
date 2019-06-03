@@ -1,26 +1,31 @@
 %!PS
-%%BoundingBox: 0 0 1024 1024
+%%BoundingBox: 0 0 1024 2048
+% 1.0 0.5 scale
 /s { //=string cvs dup stringwidth pop -2 div 0 rmoveto show } def
 /f { findfont exch scalefont setfont } def
-% /drawScale {
-% gsave
-% 20 /FreeSans-Bold f
-% rotate
-% {
-% 30 0 rmoveto
-% gsave
-% dup s
-% grestore
-% gsave
-% 0 20 rmoveto
-% dup 180 exch sub s
-% grestore
-% 30 0 rmoveto
-% -10 rotate
-% } for
-% grestore
-% } def
-/p {
+
+
+/drawScale {
+gsave
+20 /FreeSans-Bold f
+rotate
+{
+30 0 rmoveto
+gsave
+dup s
+grestore
+gsave
+0 20 rmoveto
+dup 180 exch sub s
+grestore
+30 0 rmoveto
+-10 rotate
+} for
+grestore
+} def
+
+
+/drawLogo {
 gsave
 85 /DejaVuSans f
 /checkmark glyphshow
@@ -36,15 +41,18 @@ gsave
 (MADE IN TORONTO) show
 grestore
 } def
-% 100 100 moveto
-% 0 10 180 90 drawScale
-200 490 moveto
-p
+
+
+800 500 moveto
+0 10 180 -90 drawScale
+
+200 1010 moveto
+drawLogo
 40 590 moveto
 40 /DejaVuSans f
 (l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l''''l) show
 50 410 moveto
-(i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l  i  l) show
+(i__l__i__l__i__l__i__l__i__l__i__l__i__l__i__l__i__l__i__l__i__l__i__l__i__l) show
 25 /FreeSans f
 60 580 moveto
 10 s

@@ -45,6 +45,10 @@ float sdProfile(vec2 p) {
     return dist;
 }
 
+float half_ring(vec2 p, float radius, float thickness) {
+    return max(abs(length(p)-radius)-thickness,-0.5-p.x);
+}
+
 float square(vec2 p, vec2 b)
 {
     vec2 d = abs(p)-b;
@@ -54,19 +58,31 @@ float square(vec2 p, vec2 b)
 float scene(vec3 p) {
     float ruler = sdProfile(vec2(p.z,-square(p.xy, vec2(0.8,4.0))))-0.05;
     float ruler_hole = min(length(p.xy+vec2(0.0,3.0))-0.3, length(p.xy+vec2(0.0,-4.0))-0.1);
-    return max(ruler,-ruler_hole);
+    vec2 ruler2pos = p.xy+vec2(-2.5,0.0);
+    float ruler2_outline = min(half_ring(ruler2pos, 3.3, 0.7), square(ruler2pos+vec2(0.4,0.0), vec2(0.7,4.0)));
+    float ruler2 = sdProfile(vec2(p.z,-ruler2_outline))-0.05;
+    return max(min(ruler, ruler2),-ruler_hole);
 }
 
-float stressramp(float x, float t, float e) {
-    return pow(max(t-x, 0.0), e);
+float stress_blob(vec2 p) {
+    return pow(max(1.0-length(p),0.0),4.0);
 }
 
 float stress(vec3 p) {
-    return stressramp(sdLine(vec2(length(p.zx), p.y), vec2(0.0,-3.8), vec2(0.0,3.7)),1.4,2.0)*4.0 
-        + stressramp(length(p.xy+vec2(0.0,2.7)),0.8,5.0)*30.0 + stressramp(length(p.xy+vec2(0.0,3.3)),0.8,5.0)*30.0
-        - stressramp(length(p.xy+vec2(0.3,3.0)),0.9,6.0)*8.0 - stressramp(length(p.xy+vec2(-0.3,3.0)),0.9,6.0)*8.0
-        + stressramp(length(p.xy+vec2(-0.2,-4.0)),0.9,5.0)*30.0 + stressramp(length(p.xy+vec2(0.2,-4.0)),0.9,5.0)*30.0
-        - stressramp(length(p.xy+vec2(0.0,-4.0)),0.9,6.0)*30.0;
+    return (0.5+0.5*sin(p.x*2.0))*0.25 + (0.5+0.5*cos(p.y*0.5))*0.25
+         + max(1.0-sdLine(p.xy, vec2(0.0,3.7), vec2(0.0,-3.7)),0.0)
+         + max(1.0-sdLine(p.xy, vec2(2.2,3.0), vec2(2.2,-3.0)),0.0)
+         + max(min(1.0-abs(length(p.xy+vec2(-2.5,0))-3.3),p.x-2.0),0.0)
+         + stress_blob(p.xy+vec2(0.0,3.3))*2.0
+         + stress_blob(p.xy+vec2(0.0,2.7))*2.0
+         + stress_blob(p.xy+vec2(0.3,-4.0))*3.0
+         + stress_blob(p.xy+vec2(-0.3,-4.0))*3.0
+         + stress_blob(p.xy+vec2(-2.8,-2.6))*4.0
+         + stress_blob(p.xy+vec2(-2.8,2.6))*4.0
+         + stress_blob(p.xy+vec2(-1.5,-4.0))
+         + stress_blob(p.xy+vec2(-1.5,4.0))
+         - stress_blob(p.xy+vec2(0.3,3.0))
+         - stress_blob(p.xy+vec2(-0.3,3.0));
 }
 
 vec3 sceneGrad(vec3 point) {
@@ -92,7 +108,7 @@ bool castRay(inout Ray ray) {
             return true;
         }
         
-        if (sgn < 0.0) ray.m_lag -= stress(ray.m_point)*smpl;
+        if (sgn < 0.0) ray.m_lag -= stress(ray.m_point)*smpl*5.0;
         
         ray.m_point += smpl * ray.m_direction * sgn;
     }
@@ -112,7 +128,7 @@ void phongShadeRay(inout Ray ray) {
         //oh god blackle clean this up
         ray.m_color += backlight(reflected,ray.m_lag)*0.8* (1.0 - frensel*0.98)*ray.m_attenuation;
         if (normal.z < -0.99) {
-	        ray.m_attenuation*=texture(tex,ray.m_point.yx/8.0-vec2(0.5,0.5)).x;
+	        ray.m_attenuation*=texture(tex,ray.m_point.yx/vec2(8.0, 16.0)-vec2(0.5,0.5)).x;
             // ray.m_attenuation*=0.0;
         }
         // if (normal.z < -0.99 && sin(ray.m_point.y*60.0)>0.8 && ray.m_point.x<-0.6+(sin(ray.m_point.y*60.0/5.0)>0.5?0.1:0.0)) {

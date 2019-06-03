@@ -37,7 +37,9 @@ shader.h : shader.frag.min Makefile
 postscript.ps.min : postscript.ps Makefile
 	cp postscript.ps postscript.ps.min
 	sed -i '/^%[^%!]/d' postscript.ps.min
-	sed -i 's/\(%[^\n]\+\)/\1######/g;s/\n\(.\)/ \1/g;s/###### /\n/g' postscript.ps.min
+	sed -i '/^$$/d' postscript.ps.min
+	sed -i 's/\(BoundingBox: 0 0 1024\) 2048/\1 1024\n1.0 0.5 scale/' postscript.ps.min
+	sed -i -z 's/\(%[^\n]\+\)/\1######/g;s/\n\(.\)/ \1/g;s/###### /\n/g' postscript.ps.min
 
 postscript.h : postscript.ps.min
 	xxd -i $< > $@
