@@ -5,8 +5,8 @@ CFLAGS += -fno-stack-protector -fno-stack-check -fno-unwind-tables -fno-asynchro
 CFLAGS += -no-pie -fno-pic -fno-PIE -fno-PIC -march=core2 -ffunction-sections -fdata-sections
 PROJNAME := main
 
-CANVAS_WIDTH := 640
-CANVAS_HEIGHT := 360
+CANVAS_WIDTH := 1920
+CANVAS_HEIGHT := 1080
 
 .PHONY: clean
 
@@ -29,7 +29,7 @@ shader.frag.min : shader.frag Makefile
 	sed -i 's/m_attenuation/c/g' $@
 	sed -i 's/m_lag/m/g' $@
 
-	sed -i 's/MAXDEPTH/6/g' $@
+	sed -i 's/MAXDEPTH/3/g' $@
 	sed -i 's/SAMPLES/1/g' $@
 	sed -i 's/CANVAS_WIDTH/$(CANVAS_WIDTH)/g' $@
 	sed -i 's/CANVAS_HEIGHT/$(CANVAS_HEIGHT)/g' $@
@@ -43,7 +43,7 @@ postscript.ps.min : postscript.ps Makefile
 	cp $< $@
 	sed -i '/^%[^%!]/d' $@
 	sed -i '/^$$/d' $@
-	sed -i 's/\(BoundingBox: 0 0\) 1024 2048/\1 2048 2048\n2.0 1.0 scale/' $@
+	sed -i 's/\(BoundingBox: 0 0\) 1024 2048/\1 4096 4096\n4.0 2.0 scale/' $@
 	sed -i -z 's/\(%[^\n]\+\)/\1######/g;s/\n\(.\)/ \1/g;s/###### /\n/g' $@
 
 

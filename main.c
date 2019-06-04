@@ -31,7 +31,7 @@
 #define DEBUG_FRAGMENT
 // #define DEBUG_PROGRAM
 #define KEY_HANDLING
-// #define FULLSCREEN
+#define FULLSCREEN
 
 static SDL_Window* mainwindow;
 
@@ -125,7 +125,7 @@ static void on_realize()
 	static unsigned char* rendered_data;
 	render_postscript(postscript_ps_min, postscript_ps_min_len, &rendered_data);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 2048, 2048, 0, GL_BGRA, GL_UNSIGNED_BYTE, rendered_data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4096, 4096, 0, GL_BGRA, GL_UNSIGNED_BYTE, rendered_data);
 }
 
 inline int abs(int x) {
