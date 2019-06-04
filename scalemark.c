@@ -31,7 +31,6 @@
 #define DEBUG_FRAGMENT
 // #define DEBUG_PROGRAM
 #define KEY_HANDLING
-#define FULLSCREEN
 
 static SDL_Window* mainwindow;
 

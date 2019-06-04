@@ -52,7 +52,7 @@ postscript.h : postscript.ps.min
 	sed -i 's/unsigned char/const unsigned char/' $@
 
 $(PROJNAME).elf : $(PROJNAME).c shader.h postscript.h Makefile sys.h def.h
-	gcc -o $@ $< $(CFLAGS) $(LIBS) -DCANVAS_WIDTH=$(CANVAS_WIDTH) -DCANVAS_HEIGHT=$(CANVAS_HEIGHT)
+	gcc -o $@ $< $(CFLAGS) $(LIBS) -DCANVAS_WIDTH=$(CANVAS_WIDTH) -DCANVAS_HEIGHT=$(CANVAS_HEIGHT) -DFULLSCREEN
 
 $(PROJNAME)_unpacked : $(PROJNAME).elf
 	mv $< $@
