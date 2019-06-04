@@ -117,7 +117,7 @@ bool castRay(inout Ray ray) {
 }
 
 vec3 backlight(vec3 dir, float lag) {
-    return ML(0.3+polarized*lag)*3.0*smoothstep(0.0,1.0,clamp(-0.8-dir.z*4.0,0.0,1.0));
+    return ML(0.3+polarized*lag)*3.0*smoothstep(0.0,1.0,-0.8-dir.z*4.0);
 }
 
 void phongShadeRay(inout Ray ray) {
@@ -167,7 +167,7 @@ vec2 Nth_weyl(int n) {
 }
 
 void main() {
-	polarized = smoothstep(0.0, 1.0,sqrt(clamp(iTime-41.0, 0.0, 1.0)));
+	polarized = sqrt(smoothstep(0.0, 1.0,iTime-41.0));
 	// Normalized pixel coordinates (from -1 to 1)
 	vec2 uv_base = (gl_FragCoord.xy - vec2(CANVAS_WIDTH.0/2.0, CANVAS_HEIGHT.0/2.0))/vec2(CANVAS_WIDTH.0/2.0);
 	float pixelsize = 1.0/1920.0*2.5;
@@ -201,7 +201,7 @@ void main() {
 
     col *= pow(max(1.0 - pow(length(uv_base)*0.7, 4.0), 0.0),3.0); 
     if (iTime < 0.0) col*=0.0;
-    col*=smoothstep(1.0,0.0,(clamp((iTime-71.0)*0.3, 0.0, 1.0)));
+    col*=1.0-smoothstep(0.0,1.0,(iTime-71.0)*0.3);
     
     fragCol = vec4(pow(log(max(col+vec3(0.01,0.01,0.02),0.0)*.7+1.0),vec3(0.6))*0.9, 1.0);
 		//fragCol = alphablend(alphablend(vec4(0.5, sin(uv*10.0 + sin(iTime)*2.0), 1.0), OSD(uv/2.0+vec2(0.5,0.0), iTime/3.0)),texture(tex, mix(vec2(-0.0,-0.1), vec2(0.2,0.1), (uv*0.5+0.3))).xxyz);
