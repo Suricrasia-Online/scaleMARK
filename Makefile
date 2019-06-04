@@ -18,28 +18,29 @@ noelfver:
 	make -C noelfver
 
 shader.frag.min : shader.frag Makefile
-	cp shader.frag shader.frag.min
-	sed -i 's/m_origin/o/g' shader.frag.min
-	sed -i 's/m_direction/d/g' shader.frag.min
-	sed -i 's/m_point/k/g' shader.frag.min
-	sed -i 's/m_color/i/g' shader.frag.min
-	sed -i 's/m_attenuation/c/g' shader.frag.min
-	sed -i 's/m_lag/m/g' shader.frag.min
+	cp $< $@
+	sed -i 's/m_origin/o/g' $@
+	sed -i 's/m_direction/d/g' $@
+	sed -i 's/m_point/k/g' $@
+	sed -i 's/m_color/i/g' $@
+	sed -i 's/m_attenuation/c/g' $@
+	sed -i 's/m_lag/m/g' $@
 
-	sed -i 's/MAXDEPTH/3/g' shader.frag.min
-	sed -i 's/SAMPLES/1/g' shader.frag.min
+	sed -i 's/MAXDEPTH/3/g' $@
+	sed -i 's/SAMPLES/1/g' $@
 
-	sed -i 's/\bRay\b/Co/g' shader.frag.min
+	sed -i 's/\bRay\b/Co/g' $@
 
 shader.h : shader.frag.min Makefile
-	mono ./shader_minifier.exe shader.frag.min -o shader.h
+	mono ./shader_minifier.exe $< -o $@
 
 postscript.ps.min : postscript.ps Makefile
-	cp postscript.ps postscript.ps.min
-	sed -i '/^%[^%!]/d' postscript.ps.min
-	sed -i '/^$$/d' postscript.ps.min
-	sed -i 's/\(BoundingBox: 0 0 1024\) 2048/\1 1024\n1.0 0.5 scale/' postscript.ps.min
-	sed -i -z 's/\(%[^\n]\+\)/\1######/g;s/\n\(.\)/ \1/g;s/###### /\n/g' postscript.ps.min
+	cp $< $@
+	sed -i '/^%[^%!]/d' $@
+	sed -i '/^$$/d' $@
+	sed -i 's/\(BoundingBox: 0 0 1024\) 2048/\1 1024\n1.0 0.5 scale/' $@
+	sed -i -z 's/\(%[^\n]\+\)/\1######/g;s/\n\(.\)/ \1/g;s/###### /\n/g' $@
+
 
 postscript.h : postscript.ps.min
 	xxd -i $< > $@
@@ -75,7 +76,7 @@ $(PROJNAME) : $(PROJNAME)_opt.elf.packed
 
 %.xz : % Makefile
 	-rm $@
-	lzma --format=lzma -9 --extreme --lzma1=preset=9,lc=0,lp=0,pb=0,nice=40,depth=32,dict=16384 --keep --stdout $< > $@
+	lzma --format=lzma -9 --extreme --lzma1=preset=9,lc=0,lp=0,pb=0,nice=80,depth=32,dict=16384 --keep --stdout $< > $@
 
 %.packed : %.xz packer Makefile
 	cat ./vondehi/vondehi $< > $@

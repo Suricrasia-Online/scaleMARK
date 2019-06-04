@@ -21,18 +21,15 @@
 #include <opus/opus.h>
 
 #include "shader.h"
-const char* vshader = "#version 420\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xyxx,y.yxxx,y.xxxx};void main(){gl_Position=x[gl_VertexID];}";
 
 #define CANVAS_WIDTH 1920
 #define CANVAS_HEIGHT 1080
 #define CHAR_BUFF_SIZE 64
 
-// #define DEBUG_VERTEX
 #define DEBUG_FRAGMENT
 // #define DEBUG_PROGRAM
 #define KEY_HANDLING
 
-static GLuint vao;
 static GLuint p;
 static GLuint renderedTex;
 
@@ -66,17 +63,11 @@ static void on_render()
 	}
 	float itime = (SDL_GetTicks()-startTime)/1000.0;
 
-	glUseProgram(p);
-	glBindVertexArray(vao);
-	glVertexAttrib1f(0, 0);
-	glUniform1i(0, 0);
-	glActiveTexture(GL_TEXTURE0 + 0);
-	glBindTexture(GL_TEXTURE_2D, renderedTex);
+	// glActiveTexture(GL_TEXTURE0 + 0);
+	// glBindTexture(GL_TEXTURE_2D, renderedTex);
 	glUniform1f(0, itime);
 
-	// if (itime > 16) quit();
-
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glRecti(-1,-1,1,1);
 }
 
 static void on_realize()
@@ -86,27 +77,6 @@ static void on_realize()
 
 	glShaderSource(f, 1, &shader_frag_min, NULL);
 	glCompileShader(f);
-
-#ifdef DEBUG_VERTEX
-	{
-		GLint isCompiled = 0;
-		glGetShaderiv(f, GL_COMPILE_STATUS, &isCompiled);
-		if(isCompiled == GL_FALSE) {
-			GLint maxLength = 0;
-			glGetShaderiv(f, GL_INFO_LOG_LENGTH, &maxLength);
-
-			char error[maxLength];
-			glGetShaderInfoLog(f, maxLength, &maxLength, error);
-			SYS_write(0, error, maxLength);
-
-			quit();
-		}
-	}
-#endif
-
-	GLuint v = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(v, 1, &vshader, NULL);
-	glCompileShader(v);
 
 #ifdef DEBUG_FRAGMENT
 	{
@@ -125,9 +95,7 @@ static void on_realize()
 	}
 #endif
 
-	// link shader
 	p = glCreateProgram();
-	glAttachShader(p,v);
 	glAttachShader(p,f);
 	glLinkProgram(p);
 
@@ -148,15 +116,14 @@ static void on_realize()
 	}
 #endif
 
-	glGenVertexArrays(1, &vao);
+	glUseProgram(p);
 
-	glEnable(GL_TEXTURE_2D);
 	glGenTextures(1, &renderedTex);
 	glBindTexture(GL_TEXTURE_2D, renderedTex);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	unsigned char* rendered_data;
+	static unsigned char* rendered_data;
 	render_postscript(postscript_ps_min, postscript_ps_min_len, &rendered_data);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1024, 1024, 0, GL_BGRA, GL_UNSIGNED_BYTE, rendered_data);
