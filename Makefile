@@ -109,7 +109,7 @@ $(PROJNAME)_small : $(PROJNAME)_small_opt.elf.packed
 
 %.xz : % Makefile
 	-rm $@
-	lzma --format=lzma -9 --extreme --lzma1=preset=9,lc=0,lp=0,pb=0,nice=120,depth=32,dict=16384 --keep --stdout $< > $@
+	lzma --format=lzma -9 --extreme --lzma1=preset=9,lc=0,lp=0,pb=0,nice=110,depth=32,dict=16384 --keep --stdout $< > $@
 
 %.packed : %.xz packer Makefile
 	cat ./vondehi/vondehi $< > $@
