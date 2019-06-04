@@ -22,7 +22,7 @@
 
 #include "shader.h"
 
-#define START_OFFSET_SECONDS 0
+#define START_OFFSET_SECONDS 30
 
 // #define CANVAS_WIDTH 1920
 // #define CANVAS_HEIGHT 1080
@@ -125,7 +125,7 @@ static void on_realize()
 	static unsigned char* rendered_data;
 	render_postscript(postscript_ps_min, postscript_ps_min_len, &rendered_data);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1024, 1024, 0, GL_BGRA, GL_UNSIGNED_BYTE, rendered_data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 2048, 2048, 0, GL_BGRA, GL_UNSIGNED_BYTE, rendered_data);
 }
 
 inline int abs(int x) {

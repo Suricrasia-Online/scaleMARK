@@ -6,10 +6,13 @@
 /s { //=string cvs dup stringwidth pop -2 div 0 rmoveto show } def
 /f { findfont exch scalefont setfont } def
 
+% 30 /FreeSans-Bold f
+% 160 1850 moveto
+% (SCALEMARK       SURICRASIA ONLINE       2019) show
 
 /drawProtractor {
 gsave
-30 /FreeSans-Bold f
+30 /FreeSans f
 rotate
 {
 36 0 rmoveto
@@ -21,13 +24,13 @@ gsave
 dup 180 exch sub s
 grestore
 gsave
-0 -100 rmoveto
-0 90 rlineto
+0 -90 rmoveto
+0 80 rlineto
 stroke
 grestore
 gsave
 0 60 rmoveto
-0 100 rlineto
+0 70 rlineto
 stroke
 grestore
 36 0 rmoveto
@@ -93,8 +96,8 @@ grestore
 60 1100 moveto
 0 1 12 drawScale
 
-60 820 moveto
-0 10 120 drawScale
+200 320 moveto
+0 1 8 drawScale
 
 970 950 moveto
 gsave
@@ -114,19 +117,19 @@ gsave
 0 1 5 drawScale
 grestore
 
-825 700 moveto
+964 220 moveto
 gsave
 180 rotate
-0 1 8 drawScale
+0 10 120 drawScale
 grestore
 
-920 740 moveto
-0 10 180 -90 drawProtractor
+104 290 moveto
+0 10 180 90 drawProtractor
 
 200 1000 moveto
 drawLogo
 gsave
-900 790 moveto
+900 290 moveto
 180 rotate
 drawLogo
 grestore
