@@ -30,7 +30,7 @@ shader.frag.min : shader.frag Makefile
 	sed -i 's/m_lag/m/g' $@
 
 	sed -i 's/MAXDEPTH/3/g' $@
-	sed -i 's/SAMPLES/8/g' $@
+	sed -i 's/SAMPLES/4/g' $@
 	sed -i 's/CANVAS_WIDTH/$(CANVAS_WIDTH)/g' $@
 	sed -i 's/CANVAS_HEIGHT/$(CANVAS_HEIGHT)/g' $@
 
