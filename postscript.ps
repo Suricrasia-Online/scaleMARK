@@ -2,7 +2,7 @@
 %%BoundingBox: 0 0 1024 2048
 % 1.0 0.5 scale
 
-3 setlinewidth
+2 setlinewidth
 /s { //=string cvs dup stringwidth pop -2 div 0 rmoveto show } def
 /f { findfont exch scalefont setfont } def
 
@@ -55,13 +55,66 @@ grestore
 } def
 
 
+/drawScale {{
+25 /FreeSans f
+gsave
+25 0 rmoveto
+s
+grestore
+0 0 rmoveto
+gsave
+0 40 rmoveto
+gsave
+0 -40 rlineto
+stroke
+grestore
+0 1 3 {
+14 0 rmoveto
+gsave
+0 -14 rlineto
+stroke
+pop
+grestore
+} for
+gsave
+14 0 rmoveto
+gsave
+0 -40 rlineto
+stroke
+grestore
+grestore
+grestore
+70 0 rmoveto
+gsave
+grestore
+} for
+} def
+
+60 1100 moveto
+0 1 12 drawScale
+
+60 820 moveto
+0 10 120 drawScale
+
+970 950 moveto
+gsave
+180 rotate
+0 10 120 drawScale
+grestore
+
+825 700 moveto
+gsave
+180 rotate
+0 1 8 drawScale
+grestore
+
 920 740 moveto
 0 10 180 -90 drawProtractor
 
-200 1010 moveto
+200 1000 moveto
 drawLogo
 gsave
-900 800 moveto
+900 790 moveto
 180 rotate
 drawLogo
 grestore
