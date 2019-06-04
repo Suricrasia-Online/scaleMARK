@@ -30,7 +30,7 @@ shader.frag.min : shader.frag Makefile
 	sed -i 's/m_lag/m/g' $@
 
 	sed -i 's/MAXDEPTH/3/g' $@
-	sed -i 's/SAMPLES/1/g' $@
+	sed -i 's/SAMPLES/8/g' $@
 	sed -i 's/CANVAS_WIDTH/$(CANVAS_WIDTH)/g' $@
 	sed -i 's/CANVAS_HEIGHT/$(CANVAS_HEIGHT)/g' $@
 
@@ -81,7 +81,7 @@ $(PROJNAME) : $(PROJNAME)_opt.elf.packed
 
 %.xz : % Makefile
 	-rm $@
-	lzma --format=lzma -9 --extreme --lzma1=preset=9,lc=0,lp=0,pb=0,nice=80,depth=32,dict=16384 --keep --stdout $< > $@
+	lzma --format=lzma -9 --extreme --lzma1=preset=9,lc=0,lp=0,pb=0,nice=120,depth=32,dict=16384 --keep --stdout $< > $@
 
 %.packed : %.xz packer Makefile
 	cat ./vondehi/vondehi $< > $@

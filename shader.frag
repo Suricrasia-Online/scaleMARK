@@ -180,7 +180,7 @@ void recursivelyRender(inout Ray ray) {
 }
 
 vec2 Nth_weyl(int n) {
-    return fract(vec2(n*12664745, n*9560333)/exp2(24.));
+    return fract(vec2(n*3166186, n*2390083)/exp2(22.));
 }
 
 void main() {
