@@ -22,6 +22,8 @@
 
 #include "shader.h"
 
+#define START_OFFSET_SECONDS 0
+
 // #define CANVAS_WIDTH 1920
 // #define CANVAS_HEIGHT 1080
 #define CHAR_BUFF_SIZE 64
@@ -54,12 +56,12 @@ static void render_postscript(const unsigned char* postscript, unsigned int leng
 
 static void on_render()
 {
-	static Uint32 startTime=0;
+	static int startTime=0;
 	if (startTime == 0) {
 		startTime = SDL_GetTicks();
 		SDL_PauseAudio(0);
 	}
-	float itime = (SDL_GetTicks()-startTime)/1000.0;
+	float itime = ((int)SDL_GetTicks()-startTime-520 + START_OFFSET_SECONDS*1000)/1000.0;
 
 	glUniform1f(0, itime);
 
@@ -207,10 +209,9 @@ static void decode_random_packet(uint32_t seed, OpusDecoder* opus_decoder) {
 #define ll ___,___,
 
 static const unsigned char MUSIC_ROLL[] = {
-	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
+	//small silence thing at start
 	___,___, ll ___,___, ll ___,___, ll ___,___, ll
-	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
-	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	// OPENING
 	// ----------------------------------------- //
 	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
 	___,___, ll ___,___, ll ___,___, ll ___,___, ll
@@ -222,10 +223,19 @@ static const unsigned char MUSIC_ROLL[] = {
 	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
 	___,___, ll ___,___, ll ___,___, ll ___,___, ll
 	// ----------------------------------------- //
+
+	// ----------------------------------------- //
 	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
 	___,___, ll ___,___, ll ___,___, ll ___,___, ll
 	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
 	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	// ----------------------------------------- //
+	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	// ----------------------------------------- //
+	// WRINKLE 1
 	// ----------------------------------------- //
 	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
 	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
@@ -236,6 +246,8 @@ static const unsigned char MUSIC_ROLL[] = {
 	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
 	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
 	BP1,BP4, ll ___,___, ll ___,___, ll ___,___, ll
+	// ----------------------------------------- //
+	// WRINKLE 2
 	// ----------------------------------------- //
 	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
 	BP1,___, ll ___,___, ll BP2,___, ll ___,___, ll
@@ -247,35 +259,19 @@ static const unsigned char MUSIC_ROLL[] = {
 	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
 	BP1,BP4, ll ___,___, ll BP2,BP2, ll ___,___, ll
 	// ----------------------------------------- //
-	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
-	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
-	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
-	BP1,BP4, ll ___,___, ll ___,___, ll ___,___, ll
+	// WRINKLE 1
 	// ----------------------------------------- //
 	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
 	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
 	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
 	BP1,BP4, ll ___,___, ll ___,___, ll ___,___, ll
 	// ----------------------------------------- //
-	TI6,TIB, ll ___,___, ll GR7,___, ll ___,___, ll
+	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
 	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
-	TI6,___, ll ___,___, ll GR7,BP2, ll ___,___, ll
+	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
 	BP1,BP4, ll ___,___, ll ___,___, ll ___,___, ll
 	// ----------------------------------------- //
-	TI6,TIB, ll ___,___, ll GR7,___, ll ___,___, ll
-	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
-	TI6,___, ll ___,___, ll GR7,BP2, ll ___,___, ll
-	BP1,BP4, ll ___,___, ll ___,___, ll ___,___, ll
-	// ----------------------------------------- //
-	TI6,TIB, ll ___,___, ll GR7,___, ll ___,___, ll
-	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
-	TI6,___, ll ___,___, ll GR7,BP2, ll ___,___, ll
-	BP1,BP4, ll ___,___, ll ___,___, ll ___,___, ll
-	// ----------------------------------------- //
-	TI6,TIB, ll TI9,___, ll GR7,___, ll ___,___, ll
-	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
-	TI6,___, ll TI9,___, ll GR7,___, ll ___,___, ll
-	BP1,BP4, ll ___,___, ll BP2,BT1, ll BT1,___, ll
+	// WRINKLE 3
 	// ----------------------------------------- //
 	TI6,TIB, ll ___,___, ll GR7,___, ll ___,___, ll
 	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
@@ -287,38 +283,129 @@ static const unsigned char MUSIC_ROLL[] = {
 	TI6,___, ll ___,___, ll GR7,BP2, ll ___,___, ll
 	BP1,BP4, ll ___,___, ll ___,___, ll ___,___, ll
 	// ----------------------------------------- //
-	TI6,TIB, ll ___,___, ll GR7,___, ll ___,___, ll
+	// WRINKLE 1 (with beat)
+	// ----------------------------------------- //
+	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
 	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
+	BP1,BP4, ll ___,___, ll ___,BT1, ll ___,___, ll
+	// ----------------------------------------- //
+	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
+	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
+	BP1,BP4, ll ___,___, ll ___,BT1, ll BT1,___, ll
+	// ----------------------------------------- //
+	// WRINKLE 3 (remixed)
+	// ----------------------------------------- //
+	TI6,TIB, ll ___,___, ll GR7,___, ll ___,___, ll
+	BP1,___, ll ___,___, ll BP2,___, ll ___,___, ll
 	TI6,___, ll ___,___, ll GR7,BP2, ll ___,___, ll
+	BP1,BP4, ll ___,___, ll BP1,___, ll ___,___, ll
+	// ----------------------------------------- //
+	TI6,TIB, ll ___,___, ll GR7,___, ll ___,___, ll
+	BP1,___, ll ___,___, ll BP2,___, ll ___,___, ll
+	TI6,___, ll ___,___, ll GR7,BP2, ll ___,___, ll
+	BP1,BP4, ll ___,___, ll BP1,BT1, ll BT1,___, ll
+	// ----------------------------------------- //
+
+	// ----------------------------------------- //
+	TI6,TIB, ll ___,___, ll GR7,___, ll ___,___, ll
+	BP1,___, ll ___,___, ll BP2,___, ll ___,___, ll
+	TI6,___, ll ___,___, ll GR7,BP2, ll ___,___, ll
+	BP1,BP4, ll ___,___, ll BP1,___, ll ___,___, ll
+	// ----------------------------------------- //
+	TI6,TIB, ll ___,___, ll GR7,___, ll ___,___, ll
+	BP1,___, ll ___,___, ll BP2,___, ll ___,___, ll
+	TI6,___, ll ___,___, ll GR7,BP2, ll ___,___, ll
+	BP1,BP4, ll ___,___, ll BP1,BT1, ll BT1,___, ll
+	// ----------------------------------------- //
+	// SILENCE BEFORE WILD SHIT
+	// ----------------------------------------- //
+	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	// ----------------------------------------- //
+	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	// ----------------------------------------- //
+	// WRINKLE 4 + WRINKLE 3
+	// ----------------------------------------- //
+	BT1,TIB, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
 	BP1,BP4, ll ___,___, ll ___,___, ll ___,___, ll
 	// ----------------------------------------- //
-	TI6,TIB, ll TI9,___, ll GR7,___, ll ___,___, ll
+	BT1,TIB, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
 	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
-	TI6,___, ll TI9,___, ll GR7,___, ll ___,___, ll
-	BP1,BP4, ll ___,___, ll BP2,BT1, ll BT1,___, ll
+	TI6,___, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,BP4, ll ___,___, ll ___,___, ll ___,___, ll
 	// ----------------------------------------- //
-	TI6,TIB, ll TI9,BP3, ll GR7,___, ll ___,BP2, ll
-	BP1,___, ll ___,BP3, ll ___,___, ll ___,BP1, ll
-	TI6,___, ll TI9,BP3, ll GR7,BP3, ll ___,BP3, ll
-	BP1,BP4, ll ___,BP2, ll BP2,BT1, ll BT1,BP3, ll
+	// WRINKLE 5 (???)
 	// ----------------------------------------- //
-	TI6,TIB, ll TI9,BP2, ll GR7,BP2, ll ___,___, ll
-	BP1,___, ll ___,BP3, ll ___,___, ll ___,BP1, ll
-	TI6,___, ll TI9,BP1, ll GR7,___, ll ___,BP3, ll
-	BP1,BP4, ll ___,BP2, ll BP2,BT1, ll BT1,BP1, ll
+	BT1,___, ll ___,ML1, ll GR7,ML1, ll ML1,___, ll
+	BP4,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ML1,___, ll GR7,BP2, ll ___,___, ll
+	___,BP4, ll ___,___, ll ___,___, ll ML1,___, ll
 	// ----------------------------------------- //
-	TI6,TIB, ll TI9,BP3, ll GR7,___, ll ___,BP2, ll
-	BP1,___, ll ___,BP2, ll ___,___, ll ___,BP1, ll
-	TI6,___, ll TI9,___, ll GR7,___, ll ___,BP2, ll
-	BP1,BP4, ll ___,BP2, ll BP2,___, ll BT1,BP1, ll
+	BT1,___, ll ___,ML1, ll GR7,ML1, ll ML1,___, ll
+	BP4,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ML1,___, ll GR7,BP2, ll ___,___, ll
+	___,BP4, ll ___,___, ll ___,___, ll ML1,___, ll
 	// ----------------------------------------- //
-	TI6,TIB, ll TI9,BP2, ll GR7,BP2, ll ___,___, ll
-	BP1,___, ll ___,BP3, ll ___,___, ll ___,BP1, ll
-	TI6,___, ll TI9,BP1, ll GR7,___, ll ___,BP3, ll
-	BP1,BP4, ll ___,BP2, ll BP2,BT1, ll BT1,BP1, ll
+	// WRINKLE 4 + WRINKLE 3 (with beat)
+	// ----------------------------------------- //
+	BT1,TIB, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,BP4, ll ___,___, ll ___,___, ll ___,___, ll
+	// ----------------------------------------- //
+	BT1,TIB, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,BP4, ll ___,___, ll BT1,___, ll ___,BT1, ll
+	// ----------------------------------------- //
+	// TOTAL BREAKDOWN
+	// ----------------------------------------- //
+	ML2,TIB, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP4,___, ll ___,___, ll BP4,___, ll ___,___, ll
+	TI6,___, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,BP4, ll ___,___, ll BP5,___, ll ___,___, ll
+	// ----------------------------------------- //
+	ML2,TIB, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP4,___, ll ___,___, ll BP4,___, ll ___,___, ll
+	TI6,___, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,BP4, ll ___,___, ll BP5,___, ll ___,___, ll
+	// ----------------------------------------- //
+
+	// ----------------------------------------- //
+	ML2,TIB, ll ML1,BP5, ll GR7,ML1, ll ML1,___, ll
+	BP4,___, ll ___,___, ll BP4,___, ll ___,___, ll
+	ML2,___, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,BP4, ll ___,___, ll BP5,___, ll ___,___, ll
+	// ----------------------------------------- //
+	ML2,TIB, ll ML1,BP5, ll GR7,ML1, ll ML1,___, ll
+	BP4,___, ll ___,___, ll BP4,___, ll ___,___, ll
+	ML2,___, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,BP4, ll ___,___, ll BP5,___, ll ___,___, ll
+	// ----------------------------------------- //
+	// WRAPUP
+	// ----------------------------------------- //
+	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	// ----------------------------------------- //
+	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	// ----------------------------------------- //
 };
 
-#define SONG_LENGTH 120
+#define SONG_LENGTH 75
 #define SAMPLE_RATE 44100
 #define MAX_SAMPLES SAMPLE_RATE*SONG_LENGTH
 #define BPM (SAMPLE_RATE*60)/(DECODED_DATA_SIZE*8)
@@ -340,11 +427,16 @@ static void generate_song() {
 		int phased_i = i + triangle(i, 200, 300, 2) + DECODED_DATA_SIZE;
 		song_samples[i] += triangle(phased_i, 600, triangle(phased_i, DECODED_DATA_SIZE*32, 20000, 1), 2);
 	}
+
+	for(int i = DECODED_DATA_SIZE*640; i < DECODED_DATA_SIZE*(640+8); i++) {
+		int phased_i = i + triangle(i, 20, 60, 2) + DECODED_DATA_SIZE;
+		song_samples[i] += triangle(phased_i, 120, triangle(phased_i, DECODED_DATA_SIZE*16, 10000, 1), 2);
+	}
 }
 
 static void audio_callback(void* userdata, Uint8* stream, int len) {
 	(void)userdata;
-	static int audiotime = 0;
+	static int audiotime = START_OFFSET_SECONDS*SAMPLE_RATE*2;
 	for(int i = 0; i < len; i++) {
 		audiotime++;
 		if(audiotime > MAX_SAMPLES*2) quit();
@@ -377,7 +469,7 @@ void _start() {
 		.format = AUDIO_S16MSB,
 		.channels = 1,
 		.silence = 0,
-		.samples = 4096,
+		.samples = 512,
 		.size = 0,
 		.callback = audio_callback,
 		.userdata = 0

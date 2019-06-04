@@ -167,12 +167,18 @@ vec2 Nth_weyl(int n) {
 }
 
 void main() {
-	polarized = smoothstep(0.0, 1.0,sqrt(clamp((iTime-32.0)*0.5, 0.0, 1.0)));
+	polarized = smoothstep(0.0, 1.0,sqrt(clamp(iTime-41.0, 0.0, 1.0)));
 	// Normalized pixel coordinates (from -1 to 1)
 	vec2 uv_base = (gl_FragCoord.xy - vec2(CANVAS_WIDTH.0/2.0, CANVAS_HEIGHT.0/2.0))/vec2(CANVAS_WIDTH.0/2.0);
 	float pixelsize = 1.0/1920.0*2.5;
 
-	vec3 cameraOrigin = vec3(4.0*sin(iTime*0.5), 4.0*cos(iTime*0.5), 5.0*abs(sin(iTime*0.25)))*4.0;
+    int beat = int(iTime/1.0448);
+    int dir = 1;
+    float offset = 0.0;
+    if ((beat > 39 && beat < 60 && beat%2==0) || beat > 59) { dir*=-1; offset = 125.0; }
+    if (beat < 8 && beat%2==0) dir*=-1;
+
+	vec3 cameraOrigin = vec3(cos(dir*iTime*0.5), sin(dir*iTime*0.5), abs(sin((offset+iTime)*0.015)))*16.0;
 	vec3 focusOrigin = vec3(0.0, 0.0, 0.3);
 	vec3 cameraDirection = normalize(focusOrigin-cameraOrigin);
 
@@ -194,6 +200,8 @@ void main() {
     }
 
     col *= pow(max(1.0 - pow(length(uv_base)*0.7, 4.0), 0.0),3.0); 
+    if (iTime < 0.0) col*=0.0;
+    col*=smoothstep(1.0,0.0,(clamp((iTime-71.0)*0.3, 0.0, 1.0)));
     
     fragCol = vec4(pow(log(max(col+vec3(0.01,0.01,0.02),0.0)*.7+1.0),vec3(0.6))*0.9, 1.0);
 		//fragCol = alphablend(alphablend(vec4(0.5, sin(uv*10.0 + sin(iTime)*2.0), 1.0), OSD(uv/2.0+vec2(0.5,0.0), iTime/3.0)),texture(tex, mix(vec2(-0.0,-0.1), vec2(0.2,0.1), (uv*0.5+0.3))).xxyz);
