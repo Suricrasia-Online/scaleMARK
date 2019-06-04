@@ -324,15 +324,17 @@ static const unsigned char MUSIC_ROLL[] = {
 int16_t song_samples[MAX_SAMPLES];
 static void generate_song() {
 
-	OpusDecoder* opus_decoder_1 = opus_decoder_create(48000, 1, NULL);
-	OpusDecoder* opus_decoder_2 = opus_decoder_create(48000, 1, NULL);
-	for (int i = 0; (long unsigned int)i < sizeof(MUSIC_ROLL); i++) {
-		decode_random_packet(MUSIC_ROLL[i], i%2==0 ? opus_decoder_1 : opus_decoder_2);
+	for (int k = 0; k < 2; k++) {
+		OpusDecoder* opus_decoder = opus_decoder_create(48000, 1, NULL);
+		for (int i = 0; (long unsigned int)i < sizeof(MUSIC_ROLL)/2; i++) {
+			decode_random_packet(MUSIC_ROLL[i*2+k], opus_decoder);
 
-		for (int j = 0; j < DECODED_DATA_SIZE && i/2*DECODED_DATA_SIZE+j < MAX_SAMPLES; j++) {
-			song_samples[i/2*DECODED_DATA_SIZE+j] += DECODED_DATA[j]*4;
+			for (int j = 0; j < DECODED_DATA_SIZE && i*DECODED_DATA_SIZE+j < MAX_SAMPLES; j++) {
+				song_samples[i*DECODED_DATA_SIZE+j] += DECODED_DATA[j]*3;
+			}
 		}
 	}
+
 	for(int i = DECODED_DATA_SIZE*128; i < MAX_SAMPLES; i++) {
 		int phased_i = i + triangle(i, 200, 300, 2) + DECODED_DATA_SIZE;
 		song_samples[i] += triangle(phased_i, 600, triangle(phased_i, DECODED_DATA_SIZE*32, 20000, 1), 2);
@@ -345,7 +347,7 @@ static void audio_callback(void* userdata, Uint8* stream, int len) {
 	for(int i = 0; i < len; i++) {
 		audiotime++;
 		if(audiotime > MAX_SAMPLES*2) quit();
-		stream[i] = ((Uint8*)song_samples)[audiotime^1];
+		stream[i] = ((Uint8*)song_samples)[audiotime];
 	}
 }
 
@@ -368,7 +370,7 @@ void _start() {
 
 	static SDL_AudioSpec desired = {
 		.freq = SAMPLE_RATE,
-		.format = AUDIO_S16LSB,
+		.format = AUDIO_S16MSB,
 		.channels = 1,
 		.silence = 0,
 		.samples = 4096,
