@@ -175,10 +175,10 @@ void main() {
     int beat = int(iTime/1.0448);
     int dir = 1;
     float offset = 0.0;
-    if ((beat > 39 && beat < 60 && beat%2==0) || beat > 59) { dir*=-1; offset = 125.0; }
+    if ((beat > 39 && beat < 60 && beat%2==0) || beat > 59) { dir*=-1; offset = 100.0; }
     if (beat < 8 && beat%2==0) dir*=-1;
 
-	vec3 cameraOrigin = vec3(cos(dir*iTime*0.5), sin(dir*iTime*0.5), abs(sin((offset+iTime)*0.015)))*16.0;
+	vec3 cameraOrigin = vec3(-cos(dir*iTime*0.3), sin(dir*iTime*0.3), sin((offset+iTime)*0.018))*16.0;
 	vec3 focusOrigin = vec3(0.0, 0.0, 0.3);
 	vec3 cameraDirection = normalize(focusOrigin-cameraOrigin);
 

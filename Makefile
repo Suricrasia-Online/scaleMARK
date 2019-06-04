@@ -5,8 +5,8 @@ CFLAGS += -fno-stack-protector -fno-stack-check -fno-unwind-tables -fno-asynchro
 CFLAGS += -no-pie -fno-pic -fno-PIE -fno-PIC -march=core2 -ffunction-sections -fdata-sections
 PROJNAME := main
 
-CANVAS_WIDTH := 480
-CANVAS_HEIGHT := 270
+CANVAS_WIDTH := 960
+CANVAS_HEIGHT := 540
 
 .PHONY: clean
 
