@@ -22,7 +22,7 @@
 
 #include "shader.h"
 
-#define START_OFFSET_SECONDS 30
+#define START_OFFSET_SECONDS 0
 
 // #define CANVAS_WIDTH 1920
 // #define CANVAS_HEIGHT 1080
@@ -469,7 +469,7 @@ void _start() {
 		.format = AUDIO_S16MSB,
 		.channels = 1,
 		.silence = 0,
-		.samples = 512,
+		.samples = 1024,
 		.size = 0,
 		.callback = audio_callback,
 		.userdata = 0

@@ -44,6 +44,17 @@ float sdProfile(vec2 p) {
         && sidecond(p, c, d) < 0.0) dist *= -1.0;
     return dist;
 }
+float triangle(vec2 pp) {
+    vec2 p = pp + vec2(0.5,4.0);
+    vec2 a = vec2(0.0);
+    vec2 c = vec2(4.0, 0.0);
+    vec2 d = vec2(0.0, 8.0);
+    float dist = min(min(sdLine(p,d,a), sdLine(p,c,d)), sdLine(p,a,c));
+    if (sidecond(p, a, c) < 0.0
+        && sidecond(p, d, a) < 0.0
+        && sidecond(p, c, d) < 0.0) dist *= -1.0;
+    return dist;
+}
 
 float half_ring(vec2 p, float radius, float thickness) {
     return abs(max(length(p)-radius,-0.4-p.x))-thickness;
@@ -56,11 +67,13 @@ float square(vec2 p, vec2 b)
 }
 
 float scene(vec3 p) {
-    float ruler = sdProfile(vec2(p.z/*+smoothstep(0.0,1.0,iTime-46.0)*1.5*/,-square(p.xy, vec2(0.8,4.0))))-0.05;
+    float ruler = sdProfile(vec2(p.z,-square(p.xy, vec2(0.8,4.0))))-0.05;
     float ruler_hole = min(length(p.xy+vec2(0.0,3.0))-0.3, length(p.xy+vec2(0.0,-4.0))-0.1);
     vec2 ruler2pos = vec2(-1.0,1.0)*p.xy+vec2(5.5,0.0);
     float ruler2 = sdProfile(vec2(p.z,-half_ring(ruler2pos, 3.3, 0.7)))-0.05;
-    return max(min(ruler, ruler2),-ruler_hole);
+    vec2 ruler3pos = p.xy+vec2(5.0,0.0);
+    float ruler3 = sdProfile(vec2(p.z,-abs(triangle(ruler3pos)+0.5)+0.5))-0.05;
+    return max(min(min(ruler, ruler2),ruler3),-ruler_hole);
 }
 
 float stress_blob(vec2 p) {
@@ -69,15 +82,20 @@ float stress_blob(vec2 p) {
 
 float stress(vec3 p) {
     vec2 ruler2pos = vec2(-1.0,1.0)*p.xy+vec2(5.5,0.0);
+    vec2 ruler3pos = p.xy+vec2(5.0,0.0);
     return (0.5+0.5*sin(p.x*2.0))*0.25 + (0.5+0.5*cos(p.y*0.5))*0.25
          + max(1.0-sdLine(p.xy, vec2(0.0,3.7), vec2(0.0,-3.7)),0.0)
          + max(1.0-abs(max(length(ruler2pos)-3.3,-0.4-ruler2pos.x)),0.0)
+         + max(1.0-abs(triangle(ruler3pos)+0.5),0.0)
          + stress_blob(p.xy+vec2(0.0,3.3))*2.0
          + stress_blob(p.xy+vec2(0.0,2.7))*2.0
          + stress_blob(p.xy+vec2(0.3,-4.0))*3.0
          + stress_blob(p.xy+vec2(-0.3,-4.0))*3.0
          + stress_blob(p.xy+vec2(-5.2,-2.6))*5.0
          + stress_blob(p.xy+vec2(-5.2,2.6))*5.0
+         + stress_blob(p.xy+vec2(4.5,0.4))*4.0
+         + stress_blob(p.xy+vec2(4.5,3.0))*4.0
+         + stress_blob(p.xy+vec2(3.2,2.9))*4.0
          + stress_blob(p.xy+vec2(-6.3,-4.0))
          + stress_blob(p.xy+vec2(-6.3,4.0))
          - stress_blob(p.xy+vec2(0.3,3.0))
@@ -169,6 +187,7 @@ void main() {
 	polarized = sqrt(smoothstep(0.0, 1.0,iTime-41.0));
 	// Normalized pixel coordinates (from -1 to 1)
 	vec2 uv_base = (gl_FragCoord.xy - vec2(CANVAS_WIDTH.0/2.0, CANVAS_HEIGHT.0/2.0))/vec2(CANVAS_WIDTH.0/2.0);
+    if(abs(uv_base.y)>0.42) { fragCol*=0.0; return;}
 	float pixelsize = 1.0/CANVAS_WIDTH.0*2.5;
 
     int beat = int(iTime/1.0448);
@@ -177,7 +196,7 @@ void main() {
     if ((beat > 39 && beat < 60 && beat%2==0) || beat > 59) { dir*=-1; offset = 100.0; }
     if (beat < 8 && beat%2==0) dir*=-1;
 
-	vec3 cameraOrigin = vec3(-cos(dir*iTime*0.3), sin(dir*iTime*0.3), sin((offset+iTime)*0.018))*16.0;
+	vec3 cameraOrigin = vec3(-sin(dir*iTime*0.3), cos(dir*iTime*0.3), sin((offset+iTime)*0.018))*16.0;
 	vec3 cameraDirection = normalize(-cameraOrigin);
 
 	vec3 up = vec3(0.0,0.0,-1.0);
@@ -198,9 +217,9 @@ void main() {
     }
 
     col *= pow(max(1.0 - pow(length(uv_base)*0.7, 4.0), 0.0),3.0); 
-    if (iTime < 0.0) col*=0.0;//4.0*(1.0-texture(tex, uv_base*vec2(0.4,-0.2)-vec2(0.5,-0.09)).xyz);
+    if (iTime < 0.0) col=(abs(uv_base.y)>0.1)?vec3(0.0):3.0*(1.0-texture(tex, uv_base*vec2(0.3,-0.2)-vec2(0.5,-0.09)).xyz);
     col*=1.0-smoothstep(0.0,1.0,(iTime-71.0)*0.3);
     
-    fragCol = vec4(pow(log(max(col+vec3(0.01,0.01,0.02),0.0)*.7+1.0),vec3(0.6))*0.9, 1.0);
+    fragCol = vec4(pow(log(max(col+vec3(0.01,0.01,0.02),0.0)*.7+1.0),vec3(0.7))*0.9, 1.0);
 		//fragCol = alphablend(alphablend(vec4(0.5, sin(uv*10.0 + sin(iTime)*2.0), 1.0), OSD(uv/2.0+vec2(0.5,0.0), iTime/3.0)),texture(tex, mix(vec2(-0.0,-0.1), vec2(0.2,0.1), (uv*0.5+0.3))).xxyz);
 }
