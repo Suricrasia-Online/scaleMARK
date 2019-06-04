@@ -30,6 +30,7 @@ const char* vshader = "#version 420\nvec2 y=vec2(1.,-1);\nvec4 x[4]={y.yyxx,y.xy
 // #define DEBUG_VERTEX
 #define DEBUG_FRAGMENT
 // #define DEBUG_PROGRAM
+#define KEY_HANDLING
 
 static GLuint vao;
 static GLuint p;
@@ -165,7 +166,7 @@ inline int abs(int x) {
 	return x<0?-x:x;
 }
 
-int triangle(int x, int f, int a, int p) {
+inline int triangle(int x, int f, int a, int p) {
 	return (a*(f/p-abs((x%(f*2))-f)))/f;
 }
 
@@ -364,18 +365,14 @@ static void generate_song() {
 	OpusDecoder* opus_decoder_2 = opus_decoder_create(48000, 1, NULL);
 	for (int i = 0; (long unsigned int)i < sizeof(MUSIC_ROLL); i++) {
 		decode_random_packet(MUSIC_ROLL[i], i%2==0 ? opus_decoder_1 : opus_decoder_2);
-		// for (int j = 0; j < DECODED_DATA_SIZE; j++) {
-		// 	int abs_d = abs(DECODED_DATA[j]);
-		// 	max = max<abs_d?abs_d:max;
-		// }
-		// int mult = (6*4000)/max;
+
 		for (int j = 0; j < DECODED_DATA_SIZE && i/2*DECODED_DATA_SIZE+j < MAX_SAMPLES; j++) {
 			song_samples[i/2*DECODED_DATA_SIZE+j] += DECODED_DATA[j]*4;
 		}
 	}
 	for(int i = DECODED_DATA_SIZE*128; i < MAX_SAMPLES; i++) {
 		int phased_i = i + triangle(i, 200, 300, 2) + DECODED_DATA_SIZE;
-		song_samples[i] += (int16_t)triangle(phased_i, 600, triangle(phased_i, DECODED_DATA_SIZE*32, 22000, 1), 2);
+		song_samples[i] += triangle(phased_i, 600, triangle(phased_i, DECODED_DATA_SIZE*32, 20000, 1), 2);
 	}
 }
 
@@ -424,7 +421,11 @@ void _start() {
 	while (true) {
 		SDL_Event Event;
 		while (SDL_PollEvent(&Event)) {
-			if (Event.type == SDL_QUIT/* || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE)*/) {
+			if (Event.type == SDL_QUIT
+#if defined(KEY_HANDLING)
+				|| (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE)
+#endif
+			) {
 				quit();
 			}
 		}
