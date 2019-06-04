@@ -15,7 +15,7 @@ CANVAS_HEIGHT_FULL := 1080
 
 all : $(PROJNAME) $(PROJNAME)_small $(PROJNAME).zip
 
-$(PROJNAME).zip : $(PROJNAME) $(PROJNAME)_small $(PROJNAME)_unpacked $(PROJNAME)_small_unpacked screenshot.png
+$(PROJNAME).zip : $(PROJNAME) $(PROJNAME)_small $(PROJNAME)_unpacked $(PROJNAME)_small_unpacked README.txt screenshot.png
 	zip $@ $^
 
 packer : vondehi/vondehi.asm 
