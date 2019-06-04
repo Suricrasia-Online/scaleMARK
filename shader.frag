@@ -115,7 +115,7 @@ bool castRay(inout Ray ray) {
     float sgn = sign(scene(ray.m_origin));
     for (int i = 0; i < 100; i++) {
         float dist = length(ray.m_point - ray.m_origin);
-        if (dist > 40.0/* || ray.m_point.z < -0.1*/) {
+        if (dist > 40.0 || ray.m_point.z < -0.1) {
             return false;
         }
 
