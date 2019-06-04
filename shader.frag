@@ -169,7 +169,7 @@ vec2 Nth_weyl(int n) {
 void main() {
 	polarized = smoothstep(0.0, 1.0,sqrt(clamp((iTime-32.0)*0.5, 0.0, 1.0)));
 	// Normalized pixel coordinates (from -1 to 1)
-	vec2 uv_base = (gl_FragCoord.xy - vec2(960.0, 540.0))/vec2(960.0, 960.0);
+	vec2 uv_base = (gl_FragCoord.xy - vec2(CANVAS_WIDTH.0/2.0, CANVAS_HEIGHT.0/2.0))/vec2(CANVAS_WIDTH.0/2.0);
 	float pixelsize = 1.0/1920.0*2.5;
 
 	vec3 cameraOrigin = vec3(4.0*sin(iTime*0.5), 4.0*cos(iTime*0.5), 5.0*abs(sin(iTime*0.25)))*4.0;

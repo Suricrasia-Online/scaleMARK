@@ -5,6 +5,9 @@ CFLAGS += -fno-stack-protector -fno-stack-check -fno-unwind-tables -fno-asynchro
 CFLAGS += -no-pie -fno-pic -fno-PIE -fno-PIC -march=core2 -ffunction-sections -fdata-sections
 PROJNAME := main
 
+CANVAS_WIDTH := 480
+CANVAS_HEIGHT := 270
+
 .PHONY: clean
 
 all : $(PROJNAME)
@@ -27,7 +30,9 @@ shader.frag.min : shader.frag Makefile
 	sed -i 's/m_lag/m/g' $@
 
 	sed -i 's/MAXDEPTH/3/g' $@
-	sed -i 's/SAMPLES/1/g' $@
+	sed -i 's/SAMPLES/4/g' $@
+	sed -i 's/CANVAS_WIDTH/$(CANVAS_WIDTH)/g' $@
+	sed -i 's/CANVAS_HEIGHT/$(CANVAS_HEIGHT)/g' $@
 
 	sed -i 's/\bRay\b/Co/g' $@
 
@@ -47,7 +52,7 @@ postscript.h : postscript.ps.min
 	sed -i 's/unsigned char/const unsigned char/' $@
 
 $(PROJNAME).elf : $(PROJNAME).c shader.h postscript.h Makefile sys.h def.h
-	gcc -o $@ $< $(CFLAGS) $(LIBS)
+	gcc -o $@ $< $(CFLAGS) $(LIBS) -DCANVAS_WIDTH=$(CANVAS_WIDTH) -DCANVAS_HEIGHT=$(CANVAS_HEIGHT)
 
 $(PROJNAME)_unpacked : $(PROJNAME).elf
 	mv $< $@

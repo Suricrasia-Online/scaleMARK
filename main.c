@@ -22,13 +22,14 @@
 
 #include "shader.h"
 
-#define CANVAS_WIDTH 1920
-#define CANVAS_HEIGHT 1080
+// #define CANVAS_WIDTH 1920
+// #define CANVAS_HEIGHT 1080
 #define CHAR_BUFF_SIZE 64
 
 #define DEBUG_FRAGMENT
 // #define DEBUG_PROGRAM
 #define KEY_HANDLING
+// #define FULLSCREEN
 
 static SDL_Window* mainwindow;
 
@@ -326,7 +327,7 @@ static void generate_song() {
 
 	for (int k = 0; k < 2; k++) {
 		OpusDecoder* opus_decoder = opus_decoder_create(48000, 1, NULL);
-		for (int i = 0; (long unsigned int)i < sizeof(MUSIC_ROLL)/2; i++) {
+		for (int i = 0; i < (int)sizeof(MUSIC_ROLL)/2; i++) {
 			decode_random_packet(MUSIC_ROLL[i*2+k], opus_decoder);
 
 			for (int j = 0; j < DECODED_DATA_SIZE && i*DECODED_DATA_SIZE+j < MAX_SAMPLES; j++) {
@@ -363,7 +364,10 @@ void _start() {
 		0,
 		CANVAS_WIDTH,
 		CANVAS_HEIGHT,
-		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN
+		SDL_WINDOW_OPENGL
+#if defined(FULLSCREEN)
+			| SDL_WINDOW_FULLSCREEN
+#endif
 	);
 
 	SDL_GL_CreateContext(mainwindow);
