@@ -30,9 +30,6 @@
 // #define DEBUG_PROGRAM
 #define KEY_HANDLING
 
-static GLuint p;
-static GLuint renderedTex;
-
 static SDL_Window* mainwindow;
 
 static void quit() {
@@ -45,7 +42,7 @@ static void render_postscript(const unsigned char* postscript, unsigned int leng
 	int fd = SYS_memfd_create("", 0);
 	SYS_write(fd, postscript, length);
 
-	char memfd_path[CHAR_BUFF_SIZE];
+	static char memfd_path[CHAR_BUFF_SIZE];
 	sprintf(memfd_path, "/proc/self/fd/%d", fd);
 
 	SpectreDocument* doc = spectre_document_new();
@@ -63,8 +60,6 @@ static void on_render()
 	}
 	float itime = (SDL_GetTicks()-startTime)/1000.0;
 
-	// glActiveTexture(GL_TEXTURE0 + 0);
-	// glBindTexture(GL_TEXTURE_2D, renderedTex);
 	glUniform1f(0, itime);
 
 	glRecti(-1,-1,1,1);
@@ -95,7 +90,7 @@ static void on_realize()
 	}
 #endif
 
-	p = glCreateProgram();
+	GLuint p = glCreateProgram();
 	glAttachShader(p,f);
 	glLinkProgram(p);
 
@@ -118,6 +113,7 @@ static void on_realize()
 
 	glUseProgram(p);
 
+	GLuint renderedTex;
 	glGenTextures(1, &renderedTex);
 	glBindTexture(GL_TEXTURE_2D, renderedTex);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
