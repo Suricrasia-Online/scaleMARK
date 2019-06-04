@@ -66,7 +66,7 @@ static void on_render()
 		startTime = SDL_GetTicks();
 		SDL_PauseAudio(0);
 	}
-	float itime = ((int)SDL_GetTicks()-startTime-520 + START_OFFSET_SECONDS*1000)/1000.0;
+	float itime = ((int)SDL_GetTicks()-startTime-1040 + START_OFFSET_SECONDS*1000)/1000.0;
 
 	glUniform1f(0, itime);
 
@@ -216,6 +216,7 @@ static void decode_random_packet(uint32_t seed, OpusDecoder* opus_decoder) {
 static const unsigned char MUSIC_ROLL[] = {
 	//small silence thing at start
 	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
 	// OPENING
 	// ----------------------------------------- //
 	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
@@ -350,15 +351,15 @@ static const unsigned char MUSIC_ROLL[] = {
 	// ----------------------------------------- //
 	// WRINKLE 5 (???)
 	// ----------------------------------------- //
-	BT1,___, ll ___,ML1, ll GR7,ML1, ll ML1,___, ll
-	BP4,___, ll ___,___, ll ___,___, ll ___,___, ll
-	TI6,___, ll ML1,___, ll GR7,BP2, ll ___,___, ll
-	___,BP4, ll ___,___, ll ___,___, ll ML1,___, ll
+	BT1,TIB, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,BP4, ll ___,___, ll ___,___, ll ___,___, ll
 	// ----------------------------------------- //
-	BT1,___, ll ___,ML1, ll GR7,ML1, ll ML1,___, ll
-	BP4,___, ll ___,___, ll ___,___, ll ___,___, ll
-	TI6,___, ll ML1,___, ll GR7,BP2, ll ___,___, ll
-	___,BP4, ll ___,___, ll ___,___, ll ML1,___, ll
+	BT1,TIB, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ML1,___, ll GR7,ML1, ll ML1,___, ll
+	BP1,BP4, ll ___,___, ll BT1,___, ll ___,BT1, ll
 	// ----------------------------------------- //
 	// WRINKLE 4 + WRINKLE 3 (with beat)
 	// ----------------------------------------- //
@@ -408,6 +409,18 @@ static const unsigned char MUSIC_ROLL[] = {
 	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
 	___,___, ll ___,___, ll ___,___, ll ___,___, ll
 	// ----------------------------------------- //
+
+	// ----------------------------------------- //
+	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	// ----------------------------------------- //
+	TI6,TIB, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	TI6,___, ll ___,___, ll ___,___, ll ___,___, ll
+	___,___, ll ___,___, ll ___,___, ll ___,___, ll
+	// ----------------------------------------- //
 };
 
 #define SONG_LENGTH 75
@@ -428,13 +441,13 @@ static void generate_song() {
 		}
 	}
 
-	for(int i = DECODED_DATA_SIZE*128; i < MAX_SAMPLES; i++) {
-		int phased_i = i + triangle(i, 200, 300, 2) + DECODED_DATA_SIZE;
+	for(int i = DECODED_DATA_SIZE*136; i < MAX_SAMPLES; i++) {
+		int phased_i = i + triangle(i, 200, 300, 2) + DECODED_DATA_SIZE - DECODED_DATA_SIZE*8;
 		song_samples[i] += triangle(phased_i, 600, triangle(phased_i, DECODED_DATA_SIZE*32, 20000, 1), 2);
 	}
 
-	for(int i = DECODED_DATA_SIZE*640; i < DECODED_DATA_SIZE*(640+8); i++) {
-		int phased_i = i + triangle(i, 20, 60, 2) + DECODED_DATA_SIZE;
+	for(int i = DECODED_DATA_SIZE*648; i < DECODED_DATA_SIZE*(648+8); i++) {
+		int phased_i = i + triangle(i, 20, 60, 2) + DECODED_DATA_SIZE - DECODED_DATA_SIZE*8;
 		song_samples[i] += triangle(phased_i, 120, triangle(phased_i, DECODED_DATA_SIZE*16, 10000, 1), 2);
 	}
 }
