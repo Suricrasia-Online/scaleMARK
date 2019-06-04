@@ -4,3 +4,7 @@ main
 shader.frag.min
 shader.h
 main.elf
+scalemark.elf
+scalemark
+postscript.ps.min
+scalemark_opt.elf

@@ -3,7 +3,7 @@ LIBS := -lSDL2 -lGL -lspectre -lopus
 CFLAGS := -fno-plt -Os -std=gnu11 -nostartfiles -Wall -Wextra
 CFLAGS += -fno-stack-protector -fno-stack-check -fno-unwind-tables -fno-asynchronous-unwind-tables -fomit-frame-pointer
 CFLAGS += -no-pie -fno-pic -fno-PIE -fno-PIC -march=core2 -ffunction-sections -fdata-sections
-PROJNAME := main
+PROJNAME := scalemark
 
 CANVAS_WIDTH := 1920
 CANVAS_HEIGHT := 1080
