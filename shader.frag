@@ -220,6 +220,6 @@ void main() {
     if (iTime < 0.0) col=(abs(uv_base.y)>0.1)?vec3(0.0):3.0*(1.0-texture(tex, uv_base*vec2(0.3,-0.2)-vec2(0.5,-0.09)).xyz);
     col*=1.0-smoothstep(0.0,1.0,(iTime-71.0)*0.3);
     
-    fragCol = vec4(pow(log(max(col+vec3(0.01,0.01,0.02),0.0)*.7+1.0),vec3(0.7))*0.9, 1.0);
+    fragCol = vec4(pow(log(max(col+vec3(0.01,0.01,0.02),0.0)*.7+1.0),vec3(0.6))*0.9, 1.0);
 		//fragCol = alphablend(alphablend(vec4(0.5, sin(uv*10.0 + sin(iTime)*2.0), 1.0), OSD(uv/2.0+vec2(0.5,0.0), iTime/3.0)),texture(tex, mix(vec2(-0.0,-0.1), vec2(0.2,0.1), (uv*0.5+0.3))).xxyz);
 }
