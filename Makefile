@@ -5,12 +5,18 @@ CFLAGS += -fno-stack-protector -fno-stack-check -fno-unwind-tables -fno-asynchro
 CFLAGS += -no-pie -fno-pic -fno-PIE -fno-PIC -march=core2 -ffunction-sections -fdata-sections
 PROJNAME := scalemark
 
-CANVAS_WIDTH := 1920
-CANVAS_HEIGHT := 1080
+CANVAS_WIDTH_SMALL := 640
+CANVAS_HEIGHT_SMALL := 360
+
+CANVAS_WIDTH_FULL := 1920
+CANVAS_HEIGHT_FULL := 1080
 
 .PHONY: clean
 
-all : $(PROJNAME)
+all : $(PROJNAME) $(PROJNAME)_small $(PROJNAME).zip
+
+$(PROJNAME).zip : $(PROJNAME) $(PROJNAME)_small $(PROJNAME)_unpacked $(PROJNAME)_small_unpacked screenshot.png
+	zip $@ $^
 
 packer : vondehi/vondehi.asm 
 	cd vondehi; nasm -fbin -o vondehi vondehi.asm
@@ -30,13 +36,25 @@ shader.frag.min : shader.frag Makefile
 	sed -i 's/m_lag/m/g' $@
 
 	sed -i 's/MAXDEPTH/3/g' $@
-	sed -i 's/SAMPLES/4/g' $@
-	sed -i 's/CANVAS_WIDTH/$(CANVAS_WIDTH)/g' $@
-	sed -i 's/CANVAS_HEIGHT/$(CANVAS_HEIGHT)/g' $@
 
 	sed -i 's/\bRay\b/Co/g' $@
 
-shader.h : shader.frag.min Makefile
+shader_small.frag.min : shader.frag.min
+	cp $< $@
+	sed -i 's/SAMPLES/1/g' $@
+	sed -i 's/CANVAS_WIDTH/$(CANVAS_WIDTH_SMALL)/g' $@
+	sed -i 's/CANVAS_HEIGHT/$(CANVAS_HEIGHT_SMALL)/g' $@
+
+shader_full.frag.min : shader.frag.min
+	cp $< $@
+	sed -i 's/SAMPLES/2/g' $@
+	sed -i 's/CANVAS_WIDTH/$(CANVAS_WIDTH_FULL)/g' $@
+	sed -i 's/CANVAS_HEIGHT/$(CANVAS_HEIGHT_FULL)/g' $@
+
+shader_small.h : shader_small.frag.min Makefile
+	mono ./shader_minifier.exe $< -o $@
+
+shader_full.h : shader_full.frag.min Makefile
 	mono ./shader_minifier.exe $< -o $@
 
 postscript.ps.min : postscript.ps Makefile
@@ -51,13 +69,23 @@ postscript.h : postscript.ps.min
 	xxd -i $< > $@
 	sed -i 's/unsigned char/const unsigned char/' $@
 
-$(PROJNAME).elf : $(PROJNAME).c shader.h postscript.h Makefile sys.h def.h
-	gcc -o $@ $< $(CFLAGS) $(LIBS) -DCANVAS_WIDTH=$(CANVAS_WIDTH) -DCANVAS_HEIGHT=$(CANVAS_HEIGHT) -DFULLSCREEN
+$(PROJNAME).elf : $(PROJNAME).c shader_full.h postscript.h Makefile sys.h def.h
+	gcc -o $@ $< $(CFLAGS) $(LIBS) -DCANVAS_WIDTH=$(CANVAS_WIDTH_FULL) -DCANVAS_HEIGHT=$(CANVAS_HEIGHT_FULL) -DFULLSIZE
+
+$(PROJNAME)_small.elf : $(PROJNAME).c shader_small.h postscript.h Makefile sys.h def.h
+	gcc -o $@ $< $(CFLAGS) $(LIBS) -DCANVAS_WIDTH=$(CANVAS_WIDTH_SMALL) -DCANVAS_HEIGHT=$(CANVAS_HEIGHT_SMALL)
 
 $(PROJNAME)_unpacked : $(PROJNAME).elf
 	mv $< $@
 
+$(PROJNAME)_small_unpacked : $(PROJNAME)_small.elf
+	mv $< $@
+
 $(PROJNAME) : $(PROJNAME)_opt.elf.packed
+	mv $< $@
+	wc -c $(PROJNAME)
+
+$(PROJNAME)_small : $(PROJNAME)_small_opt.elf.packed
 	mv $< $@
 	wc -c $(PROJNAME)
 
@@ -87,7 +115,5 @@ $(PROJNAME) : $(PROJNAME)_opt.elf.packed
 	cat ./vondehi/vondehi $< > $@
 	chmod +x $@
 
-.PRECIOUS: $(PROJNAME)_opt.elf
-
 clean :
-	-rm *.elf *.xz shader.h $(PROJNAME) $(PROJNAME)_unpacked
+	-rm *.elf *.xz shader.h $(PROJNAME) $(PROJNAME)_unpacked $(PROJNAME)_small $(PROJNAME)_small_unpacked

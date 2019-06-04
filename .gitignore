@@ -8,3 +8,9 @@ scalemark.elf
 scalemark
 postscript.ps.min
 scalemark_opt.elf
+shader*.min
+shader*.h
+scalemark_small
+scalemark_small_unpacked
+scalemark_unpacked
+scalemark.zip

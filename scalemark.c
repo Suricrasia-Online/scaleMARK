@@ -20,7 +20,13 @@
 
 #include <opus/opus.h>
 
-#include "shader.h"
+#if defined(FULLSIZE)
+#include "shader_full.h"
+#define SHADER_SOURCE shader_full_frag_min
+#else
+#include "shader_small.h"
+#define SHADER_SOURCE shader_small_frag_min
+#endif
 
 #define START_OFFSET_SECONDS 0
 
@@ -72,7 +78,7 @@ static void on_realize()
 	// compile shader
 	GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
 
-	glShaderSource(f, 1, &shader_frag_min, NULL);
+	glShaderSource(f, 1, &SHADER_SOURCE, NULL);
 	glCompileShader(f);
 
 #ifdef DEBUG_FRAGMENT
@@ -456,7 +462,7 @@ void _start() {
 		CANVAS_WIDTH,
 		CANVAS_HEIGHT,
 		SDL_WINDOW_OPENGL
-#if defined(FULLSCREEN)
+#if defined(FULLSIZE)
 			| SDL_WINDOW_FULLSCREEN
 #endif
 	);
