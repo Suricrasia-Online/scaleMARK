@@ -52,7 +52,7 @@ shader_small.frag.min : shader.frag.min
 
 shader_full.frag.min : shader.frag.min
 	cp $< $@
-	sed -i 's/SAMPLES/2/g' $@
+	sed -i 's/SAMPLES/4/g' $@
 	sed -i 's/CANVAS_WIDTH/$(CANVAS_WIDTH_FULL)/g' $@
 	sed -i 's/CANVAS_HEIGHT/$(CANVAS_HEIGHT_FULL)/g' $@
 
