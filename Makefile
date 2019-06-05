@@ -88,11 +88,11 @@ $(PROJNAME)_small_unpacked : $(PROJNAME)_small.elf
 
 $(PROJNAME) : $(PROJNAME)_opt.elf.packed
 	mv $< $@
-	wc -c $(PROJNAME)
+	wc -c $@
 
 $(PROJNAME)_small : $(PROJNAME)_small_opt.elf.packed
 	mv $< $@
-	wc -c $(PROJNAME)
+	wc -c $@
 
 #all the rest of these rules just takes a compiled elf file and generates a packed version of it with vondehi
 %_opt.elf : %.elf Makefile noelfver
