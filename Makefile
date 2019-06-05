@@ -11,9 +11,14 @@ CANVAS_HEIGHT_SMALL := 360
 CANVAS_WIDTH_FULL := 1920
 CANVAS_HEIGHT_FULL := 1080
 
-.PHONY: clean
+.PHONY: clean checkgccversion
 
-all : $(PROJNAME) $(PROJNAME)_small $(PROJNAME).zip
+all : checkgccversion $(PROJNAME) $(PROJNAME)_small $(PROJNAME).zip
+
+checkgccversion :
+ifneq ($(shell expr `gcc -dumpversion`),8.3.0)
+	$(error GCC version must be 8.3.0 (if newer, just remove this check. You can find it, I beleive in you. Just look at the makefile and use ctrl+f. The best piece of advice I've ever gotten for fixing issues with code I do not own is "follow the strings." If you do that, everything will come to you))
+endif
 
 $(PROJNAME).zip : $(PROJNAME) $(PROJNAME)_small $(PROJNAME)_unpacked $(PROJNAME)_small_unpacked README.txt screenshot.png
 	zip $@ $^
