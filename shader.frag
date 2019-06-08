@@ -6,12 +6,6 @@ out vec4 fragCol;
 // #define MAXDEPTH 3
 // #define SAMPLES 1
 
-float polarized;// = false;
-
-vec3 ML(float F) {
-    return mat3(1.5,-.2,-.1,-.6,1.1,.2,-.1,.1,1.5)*(.5-.5*cos(2.*F*vec3(5.2,5.7,7.2)));
-}
-
 struct Ray
 {
   vec3 m_origin;
@@ -21,6 +15,12 @@ struct Ray
   float m_attenuation;
   float m_lag;
 };
+
+float polarized;// = false;
+
+vec3 ML(float F) {
+    return mat3(1.5,-.2,-.1,-.6,1.1,.2,-.1,.1,1.5)*(.5-.5*cos(2.*F*vec3(5.2,5.7,7.2)));
+}
 
 float sdLine(vec2 p, vec2 a, vec2 b )
 {
@@ -154,13 +154,13 @@ void phongShadeRay(inout Ray ray) {
 }
 
 void transmitRay(inout Ray ray) {
-	float ior = 1.4;
+	// float ior = 1.4;
     float sgn = sign(scene(ray.m_origin));
     vec3 normal = -sgn*sceneGrad(ray.m_point);
     //float frensel = clamp(abs(dot(ray.m_direction, normal))+0.5, 0.0,1.0); //this equation is bullshit
     ray.m_point -= normal*0.0005;
     
-    ray.m_direction = refract(ray.m_direction, normal, sgn>0.0?1.0/ior:ior);
+    ray.m_direction = refract(ray.m_direction, normal, sgn>0.0?0.7:1.4);
     float frensel = abs(dot(ray.m_direction, normal));
     ray.m_attenuation *= exp(-length(ray.m_point-ray.m_origin)*0.01)/exp(0.0);
 
@@ -180,7 +180,7 @@ void recursivelyRender(inout Ray ray) {
 }
 
 vec2 Nth_weyl(int n) {
-    return fract(vec2(n*3166186, n*2390083)/exp2(22.));
+    return fract(vec2(n*49471, n*37345)/exp2(16.));
 }
 
 void main() {
@@ -188,7 +188,6 @@ void main() {
 	// Normalized pixel coordinates (from -1 to 1)
 	vec2 uv_base = (gl_FragCoord.xy - vec2(CANVAS_WIDTH.0/2.0, CANVAS_HEIGHT.0/2.0))/vec2(CANVAS_WIDTH.0/2.0);
     if(abs(uv_base.y)>0.42) { fragCol*=0.0; return;}
-	float pixelsize = 1.0/CANVAS_WIDTH.0*2.5;
 
     int beat = int(iTime/1.0448);
     int dir = 1;
@@ -199,8 +198,7 @@ void main() {
 	vec3 cameraOrigin = vec3(-sin(dir*iTime*0.3), cos(dir*iTime*0.3), sin((offset+iTime)*0.018))*16.0;
 	vec3 cameraDirection = normalize(-cameraOrigin);
 
-	vec3 up = vec3(0.0,0.0,-1.0);
-	vec3 plateXAxis = normalize(cross(cameraDirection, up));
+	vec3 plateXAxis = normalize(cross(cameraDirection, vec3(0.0,0.0,-1.0)));
 	vec3 plateYAxis = normalize(cross(cameraDirection, plateXAxis));
 
 	float fov = radians(40.0);
@@ -208,7 +206,7 @@ void main() {
     vec3 col = vec3(0.0);
     
     for(int i = 0; i < SAMPLES;i++){
-   		vec2 uv = uv_base + Nth_weyl(i)*pixelsize;
+   		vec2 uv = uv_base + Nth_weyl(i)/CANVAS_WIDTH.0*2.5;
 		vec3 platePoint = (plateXAxis * -uv.x + plateYAxis * uv.y) * tan(fov /2.0);
 
    		Ray ray = Ray(cameraOrigin, normalize(platePoint + cameraDirection), cameraOrigin, vec3(0.0), 1.0, 0.0);
