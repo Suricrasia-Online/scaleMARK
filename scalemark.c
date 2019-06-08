@@ -45,7 +45,7 @@ static void quit() {
 	SYS_exit_group(0);
 	__builtin_unreachable();
 }
-
+static GLuint p;
 static void render_postscript(const unsigned char* postscript, unsigned int length, unsigned char** data) {
 	int fd = SYS_memfd_create("", 0);
 	SYS_write(fd, postscript, length);
@@ -68,7 +68,7 @@ static void on_render()
 	}
 	float itime = ((int)SDL_GetTicks()-startTime-2080 + START_OFFSET_SECONDS*1000)/1000.0;
 
-	glUniform1f(0, itime);
+	glUniform1f(glGetUniformLocation(p,VAR_ITIME), itime);
 
 	glRecti(-1,-1,1,1);
 }
@@ -98,7 +98,7 @@ static void on_realize()
 	}
 #endif
 
-	GLuint p = glCreateProgram();
+	p = glCreateProgram();
 	glAttachShader(p,f);
 	glLinkProgram(p);
 
