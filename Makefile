@@ -58,9 +58,11 @@ shader_full.frag.min : shader.frag.min
 
 shader_small.h : shader_small.frag.min Makefile
 	mono ./shader_minifier.exe $< -o $@
+	sed -i 's/\([0-9]\+\)\.\([^0-9]\)/\1\2/g' $@
 
 shader_full.h : shader_full.frag.min Makefile
 	mono ./shader_minifier.exe $< -o $@
+	sed -i 's/\([0-9]\+\)\.\([^0-9]\)/\1\2/g' $@
 
 postscript.ps.min : postscript.ps Makefile
 	cp $< $@
