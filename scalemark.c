@@ -79,18 +79,14 @@ static void on_realize()
 
 #ifdef DEBUG_PROGRAM
 	{
-		GLint isLinked = 0;
-		glGetProgramiv(p, GL_LINK_STATUS, (int *)&isLinked);
-		if (isLinked == GL_FALSE) {
-			GLint maxLength = 0;
-			glGetProgramiv(p, GL_INFO_LOG_LENGTH, &maxLength);
+		GLint maxLength = 0;
+		glGetProgramiv(p, GL_INFO_LOG_LENGTH, &maxLength);
 
-			char error[maxLength];
-			glGetProgramInfoLog(p, maxLength, &maxLength,error);
-			SYS_write(0, error, maxLength);
+		char error[maxLength];
+		glGetProgramInfoLog(p, maxLength, &maxLength,error);
+		SYS_write(0, error, maxLength);
 
-			quit();
-		}
+		if (maxLength > 0) quit();
 	}
 #endif
 
