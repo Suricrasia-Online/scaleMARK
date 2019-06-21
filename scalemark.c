@@ -34,8 +34,7 @@
 // #define CANVAS_HEIGHT 1080
 #define CHAR_BUFF_SIZE 64
 
-#define DEBUG_FRAGMENT
-// #define DEBUG_PROGRAM
+#define DEBUG_PROGRAM
 #define KEY_HANDLING
 
 static SDL_Window* mainwindow;
@@ -76,31 +75,7 @@ static void on_render()
 static void on_realize()
 {
 	// compile shader
-	GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
-
-	glShaderSource(f, 1, &SHADER_SOURCE, NULL);
-	glCompileShader(f);
-
-#ifdef DEBUG_FRAGMENT
-	{
-		GLint isCompiled = 0;
-		glGetShaderiv(f, GL_COMPILE_STATUS, &isCompiled);
-		if(isCompiled == GL_FALSE) {
-			GLint maxLength = 0;
-			glGetShaderiv(f, GL_INFO_LOG_LENGTH, &maxLength);
-
-			char error[maxLength];
-			glGetShaderInfoLog(f, maxLength, &maxLength, error);
-			SYS_write(0, error, maxLength);
-
-			quit();
-		}
-	}
-#endif
-
-	p = glCreateProgram();
-	glAttachShader(p,f);
-	glLinkProgram(p);
+	p = glCreateShaderProgramv(GL_FRAGMENT_SHADER, 1, &SHADER_SOURCE);
 
 #ifdef DEBUG_PROGRAM
 	{
